@@ -1,0 +1,31 @@
+orgvar | var | descr
+
+year | year | Year
+total_pat | total_pat | Total number of patents filed at the European Patent Office (EPO)
+green_pat | green_pat | Number of patents filed at the EPO classified as 'low-carbon technologies'
+pollution_control_pat | pollution_control_pat | Number of patents filed at the EPO classified as Pollution Control Patents as defined by Popp (2006)
+total_pat_ETS | total_pat_ETS | Number of total patents filed by firms that are regulated by the EU ETS
+green_pat_ETS | green_pat_ETS | Number of low-carbon patents filed by firms that are regulated by the EU ETS
+total_pat_non_ETS | total_pat_non_ETS | Number of total patents filed by firms that are not regulated by the EU ETS
+green_pat_non_ETS | green_pat_non_ETS | Number of low-carbon patents filed by firms that are not regulated by the EU ETS
+oil_price | oil_price | Crude oil price per barrel in USD 2010
+
+firm.id | firm.id | Firm number
+age | age | Years since incorporation of the firm
+turnover | turnover | Turnover of the last year (in million €)
+pat | pat | Total number of patents filed by the firm in the period before the treatment
+green.pat | green.pat | Number of low-carbon patents filed by the firm in the period before the treatment
+
+matching_id | matching_id | Number of match
+ETS | ETS | Dummy variable, = 1 if the firm is regulated by the EU ETS
+total_pat_0004 | total_pat_0004 | Total number of patents registered by the firm 2000-2004
+total_pat_0509 | total_pat_0509 | Total number of patents registered by the firm 2005-2009
+green_pat_0004 | green_pat_0004 | Number of low-carbon patents registered by the firm 2000-2004
+green_pat_0509 | green_pat_0509 | Number of low-carbon patents registered by the firm 2005-2009
+
+total_pat0004 | total_pat0004 | Total number of patents registered by the firm 2000-2004
+total_pat0509 | total_pat0509 | Total number of patents registered by the firm 2005-2009
+green_pat0004 | green_pat0004 | Number of low-carbon patents registered by the firm 2000-2004
+green_pat0509 | green_pat0509 | Number of low-carbon patents registered by the firm 2005-2009
+matched | matched | Dummy variable, = 1 if the firm could be matched successfully
+

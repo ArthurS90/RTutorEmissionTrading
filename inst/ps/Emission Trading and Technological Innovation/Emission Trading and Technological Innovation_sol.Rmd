@@ -1,0 +1,1826 @@
+# Problem Set Emission Trading and Technological Innovation
+
+Author: Arthur Schaefer
+
+#< ignore
+```{r " "}
+library(RTutor)
+library(yaml)
+#library(restorepoint)
+setwd("C:/Users/Arthur/Desktop/Masterarbeit")
+ps.name = "Emission Trading and Technological Innovation"; sol.file = paste0(ps.name,"_sol.Rmd")
+libs = c("yaml","ggplot2","gridExtra","strucchange","coin","Matching","dplyr") # character vector of all packages you load in the problem set
+#name.rmd.chunks(sol.file) # set auto chunk names in this file
+create.ps(sol.file=sol.file, ps.name=ps.name, addons ="quiz", user.name=NULL,
+libs=libs, extra.code.file="extracode.R", var.txt.file="variables.txt")
+# When you want to solve in the browser
+show.ps(ps.name,launch.browser=TRUE, load.sav=FALSE,
+sample.solution=FALSE, is.solved=FALSE)
+```
+#>
+
+Welcome to the Problem Set "Emission Trading and Technological Innovation", which is part of my master thesis at the University of Ulm. In this interactive tool you will learn something about environmental policy and the effect it has on the development of new technologies. Most of the analysis in this problem set is developed from the paper **"Environmental Policy and Directed Technological Change: Evidence from the European carbon market"**, written by Raphael Calel and Antoine Dechezlepretre, published in 2012 (Centre for Climate Change Economics and Policy, Working paper 87). The article is available at <a href="http://personal.lse.ac.uk/dechezle/Calel_Dechezlepretre_2014.pdf" target = "_blank"> personal.lse.ac.uk/dechezle/Calel_Dechezlepretre_2014.pdf</a>. You can also download the original code and data from <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/28549" target = "_blank"> dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/28549</a>. The problem set is created using the programming language "R", particularly the R package "R Tutor" and can be downloaded from https://github.com/ArthurS90. 
+
+The problem set is structured as follows: After a quick introduction to the subject (ex. 1) the user explores a data set with patent data by calculating summary statistics and analyzing the data in a graphical way. After that, the possible role of external factors is discussed, leading to a first naive estimate of the impact of the EU ETS (ex. 5). Here the need for an improvement of the estimate becomes clear and hence the idea of matching similar firms with different treatments is introduced. Exercises 6-8 deal with the matching process and investigate its result. After the matching, the model used to obtain a robust estimate is explained in ex. 9. The proposed estimation method is subsequently applied to the data (ex. 10) and the direct impact of the EU ETS is quantified (ex. 11). Section 12 and 13 provide a discussion and several robustness tests of the obtained result.
+
+It is recommended to do the following exercises in the correct order, since it makes most sense and knowledge you gained from earlier exercises can be very helpful later on.
+
+
+## Exercise Content
+
+  1. Introduction
+  
+  2. Exploring the Patent Data
+  
+  3. Graphical analysis of green patents
+  
+  4. Possible role of external shocks
+  
+  5. Naive estimation of the effect of the EU ETS
+  
+  6. Matching of ETS firms with non-ETS firms
+  
+  7. Data analysis of the matched sample
+  
+  8. Theoretical digression - Quality of the matching
+  
+  9. Model to estimate the treatment effect
+  
+  10. Estimating the treatment effect with the matched sample
+  
+  11. The direct impact of the EU ETS
+  
+  12. Robustness of the result
+  
+  13. Conclusion
+  
+  14. References
+
+## Exercise 1 -- Introduction
+
+If this is your first R problem set, you might want to take a look at the info box below by clicking on it. Here I will explain the basic structure and functionality of this environment.
+
+#! start_note "R Tutor Problem Sets"
+In this problem set, there will be many info boxes like this one, where you can find additional information to a specific topic if you are interested in learning more about it. You can always access and minimize it by clicking on its header.
+
+In the headline on top of the page you will find the navigation through the problem set. Besides all exercises you will find the button "Data Explorer". Here you can always access the data sets. Next to the Data Explorer you will find a symbol, where you can take a look at your current progress in solving the exercises of the problem set.
+
+Within the exercises, you will be asked to solve different tasks. This is a nice way to interactively learn about the covered topic, the economic context and also improve your programming skills in the language "R".
+
+Most of the time we will work with so called **code chunks** that contain the R code for a specific task. Sometimes you will already be given the correct code and you will just have to check it. Other times you will have to complete the code or enter your own code.
+
+The example below shows such a code chunk. There are always different options you can click:
+
+`check`: If you think the code is complete and correct you can click here. The code will then be evaluated and you will get a message if everything is fine.
+
+`hint`: If you are not sure about how to solve the task, you can click here to get a little help.
+
+`data`: This button will directly take you to the data explorer, where you can take a look at the data set in case you need it for a task.
+
+`solution`: If you don't have the time or the task is too difficult, you can click here and a sample solution will be shown, which you can check afterwards.
+
+In this case here you are given a very simple code line which assigns the value "3" to the variable `a`. You don't have to solve anything here.
+```{r "tutor info", optional=TRUE}
+#< task
+# This is a code chunk with given code
+a=3
+#>
+```
+Note that comment lines, which will not be evaluated always start with a `#`. Now you are able to solve a code chunk on your own. Create the variable `b` and store the value "2" in it. You can try the different buttons as well.
+```{r "tutor info 2", optional=TRUE}
+#< task
+# Enter your code here...
+#>
+#< hint
+display("Take a look above how the variable `a` was created.")
+#>
+b=2
+```
+Another frequent element in this problem set will be a quiz. This should be self-explanatory, you will be asked a question and have to type in an answer or select the correct answer from several choices. Sometimes you will have to do some programming or calculation in order to solve a quiz. In that case there will be an empty code chunk, in which you can run whatever you think is necessary to answer the question. Here is a little example of a quiz:
+
+#< quiz "Quiz Intro"
+question: What is "R"?
+sc:
+  - A car brand
+  - A programming language*
+  - An economic theory
+success: Great, your answer is correct!
+failure: Try again.
+
+#>
+
+#< award "Starter"
+  Welcome to the problem set, you have successfully mastered the tutorial on how an R-Tutor problem set works! 
+#>
+
+If you have successfully completed certain tasks, you will be granted an award indicating your achievement.
+
+You have learned the fundamental functionality of this problem set, so you can work through the exercises now. You can minimize this box again and get started with the analysis on emission trading and technological innovation.
+
+#! end_note
+
+In the last few decades emission trading programs have been a popular instrument for environmental policy. Many countries in all parts of the world have launched cap-and-trade programs to regulate and ultimately reduce their greenhouse gas emissions. The value of global carbon markets is over $175 billion per year and over 20% of the worldwide greenhouse gas emissions are covered by such a regulation (Kossoy et al., 2013).
+
+The largest cap-and-trade program in the world is the "European Union Emissions Trading Scheme" (EU ETS). The system was launched in 2005, setting a cap for greenhouse gas emissions of over 12,000 power stations and industrial plants in 24 countries, which covers over 40% of the EU's total emissions. The permits allocated to the installations are freely tradable between operators, providing an incentive for firms to cut their emissions.
+
+The EU ETS was expected by politics to not only reduce carbon emissions in a cost-effective manner by putting a price on them, but rather to direct a **technological change towards low-carbon innovations**. Facing a high price on emissions, companies now have an incentive to invest into the development of technologies that reduce the emission intensity of their output (Porter, 1991). This is very important for the program, because its goal is to substantially reduce the greenhouse gas emissions in the long-run and to be the driving force to build a low-carbon Europe (The EU target is to reduce greenhouse gas emissions by 80% by 2050 compared to the 1990-level).
+
+In order to keep the administration costs low, the EU ETS only regulates large installations. Smaller installations are not covered, even though the firm itself might be as large as one that is regulated. This will give us the chance to compare similar firms with each other in order to isolate the effect of the Scheme. Installations across Europe were classified, and those who satisfied certain size criteria depending on their main activity were included in the EU ETS. With each year, the number of tradable emission permits is reduced to enforce the aim. For more information on the EU ETS, visit <a href="http://ec.europa.eu/clima/policies/ets/index_en.htm" target = "_blank"> ec.europa.eu/clima/policies/ets/index_en.htm</a>.
+
+Our ambition is to examine whether the EU ETS has the desired effect on low-carbon innovation in Europe. We will look at the 5 years after the launch of the program and study the changes regarding green technology. Instead of an interview-based research we will use **patent portfolios** as an objective proxy for innovation. In recent literature, patents have been widely used as a measure of technological change (Popp, 2002, 2006; Johnstone et al., 2010; Aghion et al. 2012). The drawbacks of such a measure are well understood as well (OECD, 2009). Obviously not all innovations are patentable and patenting is not the only way to protect it. However, there are almost no examples of economically significant inventions that have not been patented (Dernis et al., 2001). Also, the deficiencies of a patent-based measure are lowered if firms operating in the same economic sector are compared (Calel and Dechezlepretre, 2012). In Section 12, a robustness test will be discussed, in which not simply patent counts are considered, but the patents are weighted by their family size and citations in order to account for the quality and impact of a certain patent.
+
+The data set we will be using records information on over 30 million firms, of which more than 5,500 operate at least one installation regulated under the EU ETS. All patents were registered at the European Patent Office (EPO), that developed a classification for low-carbon patents, allowing us to identify emission reduction technologies.
+
+As a little warm-up, you should answer the following questions:
+
+#< quiz "EU ETS"
+question: What does "EU ETS" stand for?
+sc:
+  - European Union Environmental Technology Standard
+  - European Union Emissions Trading Scheme*
+  - European Union Energy Taxation System
+  - European Union Epic Transatlantic Survey
+
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< quiz "Launch"
+question: When did the EU ETS launch?
+answer: 2005
+#>
+
+#< quiz "Patents"
+question: What is the measure for technological change in this problem set?
+sc:
+  - Total Emissions
+  - Costs of R&D in firms
+  - Average temperature
+  - Patents registered at the EPO*
+  
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+If you are interested in the numbers regarding installations and emission permits for each of the countries we are studying, you can click the info box below.
+
+#< info "Country-based numbers of the EU ETS"
+I have prepared a table for you that indicates the number of installations and their allocated emissions in Phase 1 of the program (2005-2008) for each of the 18 countries in our data set. Together our data accounts for over 90% of installations and emissions in the 18 countries we are studying, and covers roughly 80% of installations and emissions EU ETS-wide (24 countries).
+
+```{r "1 table"}
+table_countries = readRDS("Country_Data.rds")
+table_countries
+```
+#>
+
+Now that we have learned what the EU ETS and its goal is, we can proceed with getting to know our data and doing the first analysis in order to determine the effect of the EU ETS on green patenting. This will start in the next chapter.
+
+## Exercise 2 -- Exploring the Patent Data
+Let's start by taking a look at the data we will use for our analysis and do some summary statistics. First we have to load the data in our work space. This is done by using the `readRDS()` command and inserting the file name. For better clarity, the data set has already been prepared for you from the original data of the working paper. The code chunk below will load the file `Patent_Data.rds` and save it into the variable `pat`. You don't have to solve anything here, simply click `edit` and the `check` button to run the chunk. (You will have to load the data at the start of most exercises, so they work independently)
+```{r "2"}
+#< task
+pat = readRDS("Patent_Data.rds")
+#>
+```
+To get a first impression of the data set, we run the following command to see the first couple of rows. Just click `check` here again.
+```{r "2"}
+#< task
+head(pat)
+#>
+```
+As you can see, the data set contains information about the patenting history from the EPO as well as other factors that will be used later on. There is a row for each year starting from 1978 (the year the EPO was set up) and ending in 2009 (5 years after the launch of the EU ETS). After you have loaded a data set, you can always take a look at it by clicking the `data` button in case you need it to solve an exercise. You will find a more detailed description of the variables there as well.
+
+For more information on the EPO and their classification of low-carbon technologies, have a look at the info box below.
+
+#< info "European Patent Office (EPO) and classification of patents"
+The European Patent Office was set up in 1978 and its headquarter is in Munich, Germany.  It grants patents for the contracting states to the European Patent Convention. Typically, only high value inventions get patented at the EPO, which is useful for our purpose. To find out more about the activities and structure of the EPO, you can visit <a href="https://www.epo.org/index.html" target = "_blank"> epo.org/index.html</a>. 
+
+Every patent registered at the EPO is categorized. This is done using the European patent classification (ECLA). Our category of interest is the recently developed class "technologies or applications for mitigation or adaptation against climate change", or for short, "low-carbon technologies". This category is named "Y02" at the EPO, often patents from that class are also referred to as "green patents". Patent examiners of the Office are specialized in each technology and had the help of external experts creating a tagging system for every patent that is related to climate change. In the field of clean innovation studies, the Y02 class has become the international standard, since it provides a very accurate tagging of climate change mitigation patents. To get an idea of those technologies, some of the most important sub-classes included in the Y02 class and examples are listed below:
+
+  - CO2 capture and storage (chemical or biological separation)
+  - Combustion technologies (combined heat and power generation)
+  - Energy generation from renewable sources
+  - Electricity distribution and energy storage (smart grids, fuel cells)
+#>
+
+a) The first thing we would like to know is how many patents have been filed at the EPO over the whole time period we are studying. In order to do that, we basically just have to sum up all the patents from each year. To access a certain column of our data set, we use the `$` sign behind the variable `pat`. The command `sum()` sums up the entries in that specific column. Run the code chunk below to store the sum of all patents in the variable `tot.pat` and show it afterwards.
+```{r "2 a)"}
+#< task
+tot.pat = sum(pat$total_pat)
+tot.pat
+#>
+```
+For a better understanding of the later parts it would be helpful to know how many of these patents were considered as "low-carbon" by the EPO. In the paper by Calel and Dechezlepretre as well as in the data those patents are also called "green patents".
+
+b) **Task:** Repeat the calculation we did for all patents, but this time sum up all the patents that were filed as green patents. Store the number in the variable `tot.green` and show it. Remember that you can always click on `data` to look at the data set or click on `hint` to get help solving the exercise.
+```{r "2 b)""}
+#< task
+# Enter your code here...
+#>
+tot.green=sum(pat$green_pat)
+#< hint
+display("Take a look at the example above and apply it to the green patents called green_pat.")
+#>
+tot.green
+```
+c) The next step would be to calculate the share of green patents in the recording history of the EPO. This will give us an idea what percentage of all patents is relevant to this topic.
+
+**Task:** Calculate the share of green patents in the whole data set and store it in the variable `tot.share`. Use the variables `tot.pat` and `tot.green` we defined in the previous tasks. Show `tot.share` after the calculation.
+After you have completed this task, you will be able to solve the quiz below.
+```{r "2 c)"}
+#< task
+# Enter your code here...
+#>
+tot.share=tot.green/tot.pat
+#< hint
+display("You just need to divide the two variables to get a share.")
+#>
+tot.share
+```
+#< quiz "Green Patents"
+parts:
+  - question: 1. How many green patents have been registered at the EPO from 1978 to 2009?
+    answer: 52144
+  - question: 2. What percentage of all patents were classified as low-carbon?
+    choices:
+      - 0.0197 %
+      - 1.97 %*
+      - 19.7 %
+    success: Great, your answer is correct!
+    failure: Try again.
+#>
+
+#< award "Data Explorer"
+You have successfully loaded a data set and calculated summary statistics!
+#>
+
+In this exercise we got a basic idea of the data set we are using. The next step would be to find out how we can use that data for our purpose. The next chapter will guide you through a graphical way to analyze the data and get an impression of the effect of the EU ETS.
+
+## Exercise 3 -- Graphical analysis of green patents
+
+To learn more about the impact of the EU ETS, we can start with a graphical analysis. We would like to see if there was a sort of structural break in the patenting history after the launch of the EU ETS in 2005. In order to do that, we are going to generate a plot that shows the share of low-carbon patents over time.
+
+a) First, we need to load our data again.
+
+**Task:** Type in the command as in the previous exercise and load the file `Patent_Data.rds` into the variable `pat`. Afterwards, show the top of the table `pat` using the command `head()` again. Click the `check` button to run the command and check your solution.
+```{r "3 a"}
+#< task
+# Enter your code here...
+#>
+pat = readRDS("Patent_Data.rds")
+#< hint
+display("Use the 'readRDS()' command and insert the file name. Afterwards, type 'head(pat)' to see the top of the table.")
+#>
+head(pat)
+```
+Next, we are going to extract and calculate the variables we would like to plot. The code chunk below generates the vector `year` from the data set. Remember that the data is stored in the variable `pat`. Just run the code here.
+```{r "3 a) 2"}
+#< task
+year=pat$year
+#>
+```
+b) The variable we would like to plot against `year` is the share of green patents that were registered at the EPO.
+
+**Task:** Generate a vector that contains the share of green patents for each year **in %** and name it `green.share`. Remember that you can always click `hint` to get help and `data` if you need to take a look at the data set (you can scroll up to your command `head(pat)` as well).
+```{r "3 b)"}
+#< task
+# Enter your code here...
+#>
+green.share=(pat$green_pat/pat$total_pat)*100
+#< hint
+display("Define the vector as above, use division to calculate the share and multiply by 100 to get the percentage.")
+#>
+```
+
+c) Now we are able to visualize the share of green patents over the years by using the command `plot()`.
+
+#< info "plot()"
+`plot()` is the simplest function for plotting different R objects like vectors. It can generate scatter plots as well as lines of variables that you have to define. The basic call is
+```{r "info plot",eval=FALSE}
+plot(x, y)
+```
+
+Like with all functions, parameters are separated by `,`. Most of the options for `plot()` like x- or ylab for labelling are self-explanatory. The parameter `type` defines the graph type, where you have different options like for example scatter plots, lines and combinations of both.
+```{r "info plot 2",eval=FALSE}
+plot(x, y, type="p", xlab ="Name of x-axis", ylab="Name of y-axis")
+```
+For more detailed information, visit <a href="https://de.wikibooks.org/wiki/GNU_R:_plot" target = "_blank"> de.wikibooks.org/wiki/GNU_R:_plot</a>.
+#>
+
+**Task:** In the code chunk below, uncomment the line generating the plot by removing the `#` symbol and replace the "???" with the correct variables. The other two commands draw a vertical line at the year 2005 and label it, indicating the launch of the EU ETS. 
+```{r "3 c)",fig.width=10,fig.height=6}
+plot(x=year, y=green.share, type = "l",xlab = "Year",ylab = "Share of green patents (in %)", ylim = c(0,4))
+#< hint
+display("Insert the x and y variable that we have just defined.")
+#>
+#< task
+#plot(x=???, y=???, type = "l", xlab = "Year", ylab = "Share of green patents (in %)", ylim = c(0,4))
+abline(v=2005,lty=3)
+text(x=2003,y=3.9,"EU ETS")
+#>
+
+```
+The graph we created shows the share of patents protecting a low-carbon technology 1978-2009. As you can see, there has been a surge in those technologies in the early 1980s (we will get to the reason for that in a later exercise). After that, the share remained quite stable, until it began to rise again in the mid-1990s. Especially in the years after 2005, the share of low carbon patents has increased rapidly, doubling from about 2% to 4% in just a few years. It seems obvious that the development of low-carbon technologies has emerged in the year the EU ETS launched. In fact, a simple Chow test rejects the hypothesis that there is no structural break in 2005 (p<0.001). For more information on Chow tests and how to perform them in R, click the info box below.
+
+#! start_note "Chow test in R"
+A Chow test (after Gregory Chow) is a statistical test to check whether the coefficients of two linear regressions are equal. In econometrics, it is mostly used to find a structural break within a time series object. The null hypothesis of this test is that there is no structural break in the data series tested.
+
+The basic idea is to fit an ordinary least squares (OLS) model before and after a potential breaking point. After that the coefficients of the regressions are tested for equality by calculating a test statistic from the results. This statistic follows an F-distribution with degrees of freedom depending on the number of parameters and size of the two groups. Otherwise we can reject the null hypothesis and a model separating the two groups fits better. For more details on the statistics behind the Chow test, have a look at Chow, G (1960): "Tests of Equality Between Sets of Coefficients in Two Linear Regressions", Econometrica as well as Doran, H. (1989): "Applied Regression Analysis in Econometrics" or go to <a href="https://en.wikipedia.org/wiki/Chow_test" target = "_blank"> en.wikipedia.org/wiki/Chow_test</a>.
+
+To perform a Chow test in R, we use the following approach. The functions used are from the package `strucchange`.
+
+We define a time series object with the data we would like to test. The function `Fstats()` then computes a Chow test statistic (or F statistic) for every potential break point. After we have calculated the statistics, the function `breakdates()` finds the top candidate for a break point in the whole time series.
+```{r "note Chow test",optional=TRUE}
+#< task
+library(strucchange)
+
+share = ts(data=green.share,start=1978)
+fs = Fstats(share ~ 1)
+breakdates(breakpoints(fs))
+#>
+```
+The output indicates what we already expected. The top candidate for a break in our data is the year 2005, when the EU ETS launched. Of course the significance of that finding has to be calculated to make a statement about a potential structural break. The function `sctest` performs a structural change test and provides a p-value. 
+```{r "note chow test 2",optional=TRUE}
+#< task
+share = ts(data=green.share,start=1978)
+fs = Fstats(share ~ 1, from=28, to=28) # the year 2005 is the 28th entry in our time series
+sctest(fs) # p-value associated with 2005
+#>
+```
+Using the p-value, we can either reject or not reject the null hypothesis that there is no structural break in the data at a certain significance level. In our case, the p-value is very small (p<0.001), indicating that there is in fact a structural break in the share of green patenting in the year 2005 (We can reject the null hypothesis at the 0.1%-level).
+
+#! end_note
+
+d) In order to see whether there was a general trend towards technologies that are environmentally beneficial in terms of greenhouse gas emissions, we will look at the course of other patents of that kind as well. We have data on so called "pollution control technologies", as defined by Popp (2006), in our table `pat`. The purpose of those technologies is the reduction of local pollutants like sulfur oxide and nitrogen oxide.
+
+In the next code chunk, you can type what you think is necessary to answer the question about pollution control patents below. Remember, the table is on top of this page as well as in the data explorer.
+```{r "3 d)",optional=TRUE}
+#< hint
+display("Use the sum() command and choose the correct column.")
+#>
+#< task_notest
+# You can enter your commands here...
+#>
+#< notest
+sum(pat$pollution_control_pat)
+#>
+```
+#< quiz "pollution control"
+question: How many pollution control patents have been filed at the EPO in the span of 1978-2009?
+answer: 10264
+#>
+Remember that there have been filed 52,144 low-carbon patents in this time, so we are dealing with a smaller group of patents here. Nevertheless we can use the data to investigate eco-friendly, in particular emission reducing patents.
+
+We calculate the share of pollution control patents in the same way as the share of green patents. Run the following code chunk to define the vector `pct.share`.
+```{r "3 d) 2"}
+#< task
+pct.share=(pat$pollution_control_pat/pat$total_pat)*100
+#>
+```
+**Task:** Generate a figure that shows both the share of low-carbon and pollution control patents from 1978 to 2009. The first part is the same as in the previous exercise. Using the function `lines()` we can add another curve in the existing plot. Simply uncomment the two lines plotting the shares and fill in the arguments "x" and "y" for both. The rest of the code is just to mark the launch of the EU ETS and label everything.
+```{r "3 d) 3",fig.width=10,fig.height=6}
+plot(x=year, y=green.share, type = "l",xlab = "Year",ylab = "Share of patents (in %)", ylim = c(0,4))
+#< hint
+display("For the ???, fill in the arguments 'year' for x and the respective y for green patents and pollution control patents (we have defined all varibles before).")
+#>
+lines(x=year,y=pct.share, lty=5)
+#< task
+# Here the plot of low-carbon patents is generated
+#plot(x=???, y=???, type = "l",xlab = "Year",ylab = "Share of patents (in %)", ylim = c(0,4))
+abline(v=2005,lty=3)
+text(x=2003,y=3.9,"EU ETS")
+text(x=1986,y=1.9,"Low-carbon")
+
+# Here we add a plot of the pollution control patents
+#lines(x=???,y=???, lty=5)
+text(x=2001,y=0.6,"Pollution Control")
+#>
+```
+#< award "Data plotter"
+Great, you have successfully plotted multiple lines in one graph!
+#>
+
+It is apparent that the share of pollution control patents does not show a surge in 2005 like the low-carbon patents. Performing the same Chow test as above, the hypothesis of no structural break in 2005 cannot be rejected here. So the increasing patenting activity in the field of eco-friendly technologies seems to be specific to low-carbon technologies and therefore probably a consequence of the EU ETS.
+
+To summarize this exercise, you should easily be able to take the following quiz:
+
+#< quiz "Summary Ex 3"
+parts:
+  - question: 1. The share of patents protecting a low carbon technology has increased rapidly since the launch of the EU ETS in 2005.
+    choices:
+      - True*
+      - False
+  - question: 2. There was a general trend to find eco-friendly solutions that reduce greenhouse gas emissions in the years since 2005.
+    choices:
+      - True
+      - False*
+  - question: 3. What test can you use to find a structural break in a time series of data?
+    choices:
+      - Wu-Hausmann-Test
+      - Chow-Test*
+      - Chi-Squared-Test
+    success: Great, your answer is correct!
+    failure: Try again.
+#>
+
+We have qualitatively seen that there has been an upswing in the development of low-carbon technologies in the year the EU ETS was launched. Before we try to get an estimate of the effect though, let's think about something else, that (at least partially) might have caused this trend. This will be highlighted in the next exercise.
+
+## Exercise 4 -- Possible role of external shocks
+
+As we have seen, the share of patents protecting a low-carbon technology has had a strong increase since 2005. One could argue that this surge is the result of the political intervention. By putting a price on greenhouse gas emissions, the EU ETS provided incentives for companies to develop technologies that reduce those emissions.
+
+On the other hand, thinking that the trend towards low-carbon technologies is for sure a consequence of the EU ETS alone is obviously naive. Of course there are a lot of factors that influence the direction of technological change.
+
+#< quiz "Oil Price"
+question: What do you think is probably the most influential external factor for firms when it comes to reducing carbon emissions?
+sc:
+  - Inflation rate 
+  - Location of the firm
+  - Win/Loss in the last year
+  - Oil Price*
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+It is documented that the oil price has a significant effect on the innovation of carbon reducing technologies. We have seen a smaller surge in low-carbon patents in the early 1980s, which is attributed to the oil price shock in the late 1970s (Dechezlepretre et al., 2011).
+So our first question is: Is it possible that the more recent increase (since 2005) in low-carbon patenting is a result of an external shock instead of a consequence from the EU ETS? In order to learn something about that, we are going to compare the share of green patents to the evolution of the crude oil price graphically.
+
+We are loading our data set again, in which we have a column with the crude oil price for each year in 2010 USD. Run the code chunk below to load the data frame into the variable `pat` and take another look at the data provided.
+```{r "4"}
+#< task
+pat = readRDS("Patent_Data.rds")
+head(pat)
+#>
+```
+Instead of using the common command `plot()` like in previous exercises, we will introduce a package for better visualization of our data. A very nice package for creating graphs in R is `ggplot2`. It provides countless graph types, themes and options to present the data in a clear way. If you have never used `ggplot()` before, you might want to take a look at the info box first.
+
+#< info "ggplot2"
+The package `ggplot2` with the function `ggplot()` is a very powerful tool to create graphs from data frames directly. You can assign a variable name to each figure you create. This is useful if you like to add more features later on. The basic call is 
+```{r "info ggplot",eval=FALSE}
+p = ggplot(data)
+```
+with the parameter being the name of the data frame you would like to plot from. After that, you can add all types of lines, points etc., labels and themes by using the `+` sign. Here is an example, plotting a simple line and labelling it. 
+```{r "info ggplot 2",eval=FALSE}
+p = ggplot(example)+
+  geom_line(aes(x=time, y=profit), colour="red")+
+  xlab("Profits")+
+  ylab("Time")
+```
+You can always extend your existing graph or create a new one:
+```{r "info ggplot 3",eval=FALSE}
+p = p + ggtitle("Profits over time") # Adding a title
+
+p.new = p + geom_point(aes(x=time, y=cost)) #New graph including a scatter plot
+```
+The options to create an appealing graph are numerous. A good overview over graph types and themes can be found here: <a href="http://docs.ggplot2.org/current/" target = "_blank"> docs.ggplot2.org/current/</a>
+#>
+
+a) Let's look at an example of how to use `ggplot()` for our data. The code chunk below creates the graph `p1`, showing the share of green patents from 1978 to 2009 again. Only this time we are using the command `ggplot()` with the data frame `pat` where our data is stored. Take a look at the code and run it, the graph will be generated and shown afterwards.
+```{r "4 a)",fig.width=9,fig.height=5}
+#< task
+library (ggplot2)
+
+p1=ggplot(pat)+
+  geom_line(aes(x=year,y=100*(green_pat/total_pat)),colour="green")+
+  xlab("Year")+
+  ylab("Share of green Patents (in %)")
+p1
+#>
+```
+b) **Task:** Create a graph that shows the crude oil price from 1978 to 2009. Assign the name `p2` to the graph and make it in the same way as above. You don't have to care about the labelling and color here, just call the correct command and draw a line indicating the oil price over the years. Don't forget to show your graph afterwards!
+```{r "4 b)",fig.width=9,fig.height=5}
+#< task
+# Enter your code here
+#>
+p2=ggplot(pat)+
+  geom_line(aes(x=year,y=oil_price))
+#< hint
+display("Apply the example I gave you to your new graph. You only have to change the y-parameter within the geom_line() call.")
+#>
+p2
+```
+#< award "ggploter"
+Good job, you created your first graph using the function `ggplot()`!
+#>
+
+c) To find a connection between oil price and share of low-carbon patents we would like to put both graphs into one figure and compare them. In order to do that we use the function `grid.arrange()` from the package `gridExtra`. The arguments of this function are simply the names of the graphs you would like to show on top of each other.
+
+**Task:** Create a figure using `grid.arrange()`, showing the *oil price over the share of green patents*.
+```{r "4 c)",fig.width=11,fig.height=6}
+#< task
+library(gridExtra)
+# Enter your code here
+#>
+grid.arrange(p2,p1)
+```
+
+#< quiz "Correlation Oil and Green Patents"
+question: Looking at the two graphs, what correlation between oil price and share of green patents can you find?
+sc:
+  - Positive correlation*
+  - Negative correlation
+  - No correlation
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+As mentioned above, the surge of low-carbon technologies in the early 1980s has been attributed to the previous oil price shock. Looking at the two graphs, one could draw the conclusion that the more recent upswing in green patenting is also due to the rising oil price. You can see how the activity of developing low-carbon technologies follows the rapid oil price increase in the early 2000s.
+
+We can conclude that looking at the aggregate patent data is clearly not enough to determine the real effect the EU ETS had on the technological change towards low-carbon solutions. Instead our goal should be to isolate the effect in order to get a meaningful estimate of the EU ETS impact.
+
+In this exercise we have learned that a first look at the evolution of a parameter can possibly be deceptive. In order to tell the whole economic story behind a progress, one has to factor in all the circumstances this development underlies. This is obviously not easy, since the real world is very complex and theoretically all effects would have to be well understood. The next exercise discusses a first estimate of the effect of the EU ETS, trying to crowd out the external factors like the oil price.
+
+## Exercise 5 -- Naive estimation of the effect of the EU ETS
+
+Our first approach to find the true quantitative effect of the environmental policy is to compare all the firms that were regulated by the EU ETS to those who were not affected. For both groups external factors like the oil price or other macroeconomic conditions were the same. So we could assume that the only difference between those firms is the regulation by politics. It is obviously very likely that the EU ETS has encouraged innovation for regulated firms more, since they will have a direct benefit from their innovation by reducing their compliance costs. So we can isolate the effect of the EU ETS by looking at the patenting behavior and changes since the launch of the program in 2005. You can think of the regulated firms as "treatment group", while all the other firms serve as a "control group".
+
+The patent data set contains separate columns for "ETS firms" and "non-ETS firms" with both total patents and green patents. If a firm operates at least one installation regulated under the EU ETS, it is considered an ETS firm. In total there are 5,568 ETS firms in the data operating 9,358 regulated installations, which is over 90% of all the regulated installations in the 18 countries we are studying.
+
+We are loading the patent data into the variable `pat` again:
+```{r "5"}
+#< task
+pat = readRDS("Patent_Data.rds")
+head(pat)
+#>
+```
+
+a) As described above, we would like to see if there is a significant difference in technological innovation between ETS firms and non-ETS firms. First, we will do a visual comparison between the two groups by putting together a graph similar to the one we saw before. But this time, we are going to distinguish the regulated from the unregulated firms with their respective share of green technology.
+
+**Task:** Create a graph that shows the share of green patents (in %) over the years for both regulated and unregulated firms. The name of the graph should be `p3` and it should have two lines in it. To do so, uncomment the relevant code lines in the chunk below and replace all the "???" with the correct code. You might have to look at the data again to get the names of the variables right. After you have produced the graph, don't forget to show it.
+
+```{r "5 a)", fig.width=15}
+#< task_notest
+#p3=ggplot(???)+
+  #geom_???(aes(x=???,y=100*(green_pat_ETS/total_pat_ETS),color="ETS firms"))+
+  #geom_???(aes(x=???,y=???,color="Non-ETS firms"))+
+  #xlab("Year")+
+  #ylab("Share of green Patents (in %)")+
+  #theme(legend.title=element_blank())
+#>
+p3=ggplot(pat)+
+  geom_line(aes(x=year,y=100*(green_pat_ETS/total_pat_ETS),color="ETS firms"))+
+  geom_line(aes(x=year,y=100*(green_pat_non_ETS/total_pat_non_ETS),color="Non-ETS firms"))+
+  xlab("Year")+
+  ylab("Share of green Patents (in %)")+
+  theme(legend.title=element_blank())
+#< hint
+display("Remember the commands we used for our previous ggplot (drawing lines).")
+#>
+p3
+```
+As you can see in the graph, the share of low carbon patents didn't differ a lot in the five years before the launch of the EU ETS. After 2005 however, there seems to be a stronger rise of the share for the ETS firms. This becomes really apparent after 2008, when the second trading phase of the program started. This second phase was there to constrain the emissions even more tightly than phase 1, providing more incentives for firms to focus on technologies that reduce carbon emissions. So on the first look it seems that the EU ETS has had quite an impact and directed the technological change towards green innovations.
+
+b) In the next step we would like to quantify that impact with numbers. As mentioned before, we are going to (naively) assume that the difference between ETS firms and non-ETS firms, which can be seen in the upper graph, is entirely due to the EU ETS. First, we are going to calculate the increase in low-carbon patents in the years 2005-2009 compared to the five years before emission trading was introduced for both groups of firms.
+
+Let's start with the firms that were not regulated by the EU ETS. Afterwards, you should be able to repeat the calculation for the ETS firms and answer the questions asked. The following code chunk computes how many green patents have been registered by non-ETS firms in the years 2005-2009 and 2000-2004 respectively.
+
+*Note: In R, you can select certain rows of a column (or elements of a vector) using `[]`. Those brackets may contain a logical expression that can be combined with `&` for "and" or `|` for "or". In our case here, we are summing the values of a column but only selecting the rows in which the variable `year` fulfills a certain condition.*
+```{r "5 b)"}
+#< task
+non.ets.after = sum(pat$green_pat_non_ETS[pat$year>2004])
+non.ets.after # Low-carbon patents 2005-2009
+
+non.ets.before = sum(pat$green_pat_non_ETS[pat$year>1999 & pat$year<2005])
+non.ets.before # Low-carbon patents 2000-2004
+
+#Percental change
+((non.ets.after-non.ets.before)/non.ets.before)*100
+#>
+```
+As you can see, non-ETS firms filed 19,841 and 12,037 patents in the two periods, which corresponds to an increase of about 65%.
+
+**Task:** Repeat the calculation for the firms regulated by the EU ETS and answer the questions below. It might be useful to define variables, but you don't have to. You are free to enter all commands you think are required to take the quiz.
+```{r "5 b) 2",optional=TRUE}
+#< hint
+display("Take a look at the example above and apply it to the regulated firms.")
+#>
+#< task
+#Enter your code here...
+#>
+#< notest
+ets.after = sum(pat$green_pat_ETS[pat$year>2004])
+ets.after # Low-carbon patents 2005-2009
+
+ets.before = sum(pat$green_pat_ETS[pat$year>1999 & pat$year<2005])
+ets.before # Low-carbon patents 2000-2004
+
+#Percental change
+((ets.after-ets.before)/ets.before)*100
+#>
+```
+#< quiz "ETS firms after launch"
+parts:
+  - question: 1. How many low-carbon patents have been registered by ETS firms 2000-2004?
+    answer: 972
+  - question: 2. How many low-carbon patents have been registered by ETS firms 2005-2009?
+    answer: 2189
+  - question: 3. What is the increase in low-carbon patents from ETS firms after the launch of the EU ETS compared to the previous 5 years?
+    choices:
+      - 25 %
+      - 65 %
+      - 85 %
+      - 125 %*
+    success: Great, your answer is correct!
+    failure: Try again.
+#>
+
+#< award "Data scanner"
+Great, you are able to summarize certain parts of the data set!
+#>
+
+c) As you could see, the green patenting of the regulated firms has risen at a significantly higher rate. Using those numbers we will estimate how many low-carbon patents the EU ETS has added in the years 2005-2009 using all unregulated firms as a control group. *Our naive assumption is that ETS firms, had they not been regulated, would have grown their green patenting at the same rate as non-ETS firms.*
+
+**Task:** Assume the growth rate of low-carbon patents without environmental policy would have been the same for all kinds of firms **(65%)**. Compute the number of additional low-carbon patents the ETS firms have filed.
+```{r "5 c)",optional=TRUE}
+#< task_notest
+# You can calculate here...
+#>
+#< hint
+display("Use the actual number of green patents 2005-2009 and subtract the (hypothetical) number of patents without regulation.")
+#>
+#< notest
+2189-1.65*972
+#>
+```
+
+#< quiz "Naive estimation of added patents"
+question: Assuming a growth rate of 65% in a business-as-usual scenario, how many green patents has the EU ETS added?
+sc:
+  - about 348
+  - about 585*
+  - about 734 
+  - about 1022
+success: Great, your answer is correct!
+failure: This would not really help.
+#>
+
+For a better judgement of that number we should calculate the *relative increase of low carbon patents filed at the EPO* compared to what it would have been without the EU ETS. 
+
+**Task:** Compute the percental rise in green patents **caused by the EU ETS** in our estimation. As a help, I have defined the actual number of low-carbon patents from 2005-2009 as `green.after`. Remember that we have figured an added number of green patents of 585.
+```{r "5 c) 2"}
+#< task
+green.after = sum(pat$green_pat_non_ETS[pat$year>2004]) + sum(pat$green_pat_ETS[pat$year>2004])
+# You can enter your calculation here...
+#>
+#< hint
+display("In a business as usual scenario, 585 green patents would be missing (green.after-585). Calculate the relative difference between the two scenarios.")
+#>
+#< notest
+(585/(green.after-585))*100
+#>
+```
+
+#< quiz "Naive estimation relative effect"
+question: What is the increase in the number of low-carbon patents attributed to the EU ETS in our simplified estimation?
+sc:
+  - 0.9 %
+  - 1.8 %
+  - 2.7 %* 
+  - 3.6 %
+success: Great, your answer is correct!
+failure: Try again, maybe the hint will help.
+#>
+
+#< award "Effect estimator"
+You have conducted a quantitative estimation of the effect of the EU ETS! Given the assumptions we have made, our result is that the EU ETS has increased the number of low-carbon patents filed at the EPO **by about 2.7%** in the five years after its launch.
+#>
+
+d) The estimate we determined on the basis of the patent data gives us an indication of the effect of the EU ETS, but yet it is naive. A problem with impact studies in general is that you have to make sure the treatment group and control group are not systematically different from each other. If there are disparities between the groups other than the treatment itself influencing the outcome, the estimate of the effect is clearly biased.
+
+In the case at hand we have to ask ourselves if the group of unregulated firms is really representative for all firms. Just looking at the patenting history might already give an indication of disparities between ETS firms and non-ETS firms in the area of low-carbon technology, even before the EU ETS was launched.
+
+As mentioned before, our data set contains information on about 30 million firms, of which 5,568 are characterized as ETS firms.
+```{r "5 d)"}
+#< task
+30000000/5568 # The ratio of ETS firms to non-ETS firms
+#>
+```
+This corresponds to a ratio of roughly 1 in 5,400.
+
+**Task:** Compute the ratio of green patents from EU ETS firms to non-ETS firms in the **5 years before the ETS** (2000-2004). As a little help, I provided the basic structure of a possible solution. You can take a look at the `hint` as well.
+```{r "5 d) 2"}
+#< task
+# sum(???[???])/sum(???[???])
+#>
+sum(pat$green_pat[pat$year<2005&pat$year>1999])/sum(pat$green_pat_ETS[pat$year<2005&pat$year>1999])
+#< hint 
+display("Sum up all green patents 2000-2004 and divide by the green patents of ETS firms 2000-2004.")
+#>
+```
+
+While only about 1 in 5,400 firms is regulated by the EU ETS, they account for an extremely disproportionate part of the total low-carbon patenting (1 in 14). Clearly the two groups are systematically different even before the EU ETS was introduced. Therefore one can imagine an external factor or shock (other than the EU ETS) having a very different impact on each of the groups. Our estimate doesn't take that into account at all, which is why it has to be improved.
+
+To address this problem, we have to give up comparing all regulated to all unregulated firms. So a restriction of our observations to firms that are more similar in their characteristics before 2005 is necessary. Because of their resemblance, it is more likely that external shocks won't have a systematically different impact on the two groups and thus yield a better estimate of the effect the EU ETS had on their low-carbon patenting activity.
+
+## Exercise 6 -- Matching of ETS firms with non-ETS firms
+
+To estimate the real effect of the EU ETS we need to eliminate the systematic difference between the firms we investigated so far. By comparing two groups of firms that are more similar in their characteristics before the EU ETS launched the effect can be isolated. The goal is to find at least one unregulated firm for every regulated one with similar characteristics. Two matched firms ideally should face the same demand conditions, available resources, input prices etc. This task is not very easy, because the regulatory status of a firm is based on the installations it is operating (size and main activity). It is clear that this leads to an automatic systematic difference between regulated and unregulated firms. That being said, this configuration makes it (at least theoretically) possible to find ETS firms and non-ETS firms that are identical in all aspects relevant to their patenting, except for the size of **a single** installation.
+
+The authors of "Emission Trading and Directed Technological Change" performed the matching for the EU ETS firms. They used patent portfolios as the most important criteria for similarity. Along with that, matched firms have to operate in the same country and the same economic sector (e.g. "electric power generation, transmission and distribution" or "manufacture of glass and glass products" etc.). Furthermore data on the turnover and age of the firm was used to perform the matching.
+
+Using those characteristics as matching criteria, the resulting pairs of firms (one ETS firm and possibly several suitable non-ETS firms) are exposed to the same business and regulatory environment. They face the same input prices and sector specific shocks and trends. All in all, the factors that influence the patenting behaviour in green technology are adapted. One could argue that basically the only difference between the two groups of the resulting sample is their regulatory status regarding the EU ETS.
+
+Since the firm specific data cannot be shared here for licensing reasons, **we are not able to replicate the matching with the real world data.** However, for educational purposes I have created a **fictitious data set** with "firm data" for you. With the help of this data set we will be able to reenact the approach used to construct the matched sample, which should yield a better estimate of the impact of the EU ETS.
+
+a) Let's take a look at the self-made data set (the data was generated using random numbers with reasonable distributions). It is stored in the file `Fake_Firms.rds`.
+
+```{r "6 a)"}
+#< task
+fake.firms = readRDS("Fake_Firms.rds")
+head(fake.firms,10)
+#>
+```
+
+As you can see, the fictitious data set contains various firm specific characteristics. The column `ETS` is a dummy variable and equals 1, if the firm was regulated by the EU ETS. In the data set, there are 100 of those "ETS-firms" followed by 4900 "non-ETS-firms" as potential partners. The other variables correspond to the years of activity, last year's turnover (in million Euro) and the number of total as well as green patents filed in the last 5 years. We assume this data set consist of firms that operate in the same country and the same economical sector (this is a general requirement for firms to be eligible for matching).
+
+Remember two things here: First, these are the firm characteristics **before** the EU ETS was launched. By comparing the firms in that time we are able to isolate the effect on green patenting by the EU ETS. Second, the numbers here **do not correspond to real firms**. They are simply made up to theoretically show how matching is conducted.
+
+b) The matching itself is done by an existing function in R called `GenMatch()` from the package `Matching`. The function is using an algorithm to find an optimally balanced partner for every firm using multivariate matching. Observations can also be dropped, if there is no similar partner for a specific observation (the required similarity can be adjusted for every variable). For more details, click the info box below.
+
+#< info "Propensity Score Matching"
+Propensity score matching is a statistical matching technique constructed to investigate the effect of a certain treatment or intervention. It accounts for the covariates that influence the variable of interest and finds the optimal balance of those covariates between treatment and control group. For statistical details, take a look at Rosenbaum, P.R. (1983). "The Central Role of the Propensity Score in Observational Studies for Causal Effects". Biometrika. Here the method was published for the first time.
+
+The implementation of the technique for R was done by J.S. Sekhon. The function `GenMatch()` finds the optimal balance using multivariate matching with a genetic search algorithm. For more details, see Sekhon, J.S. (2011). "Multivariate and Propensity Score Matching Software with Automated Balance Optimization." Journal of Statistical Software.
+#>
+
+The function `GenMatch()` needs parameters in order to perform the matching which we are going to extract from our data in the next code chunk. 
+The variable `Tr` is a vector that indicates which of the observations are in the treatment group and thus need a match from the control group. `Tr` can be either a logical vector or a numeric vector where 0 denotes control and 1 denotes treatment, therefore we can simply use the column 'ETS' from our data set. `X` is a matrix containing the variables we wish to match on (age, turnover, patents, green patents). In order to extract those from the data set, we can use the function `select()` from the package `dplyr`.
+
+**Task:** Complete the chunk below to define the variables `Tr` and `X` like described above.
+
+```{r "6 b)"}
+#< task
+# Tr = ???$???
+
+#library(dplyr)
+
+# X = select(fake.firms, ???, ???, ???, ???)
+# head(X)
+#>
+Tr = fake.firms$ETS
+
+library(dplyr)
+
+X = select(fake.firms, age, turnover, pat, green.pat)
+head(X)
+```
+
+c) Now we are ready to perform the matching and pair up the ETS firms with similar non-ETS firms (if a partner exists). We call the function `GenMatch()` with the parameters we set in the code chunk above and set a caliper of 0.2 (a caliper is the distance which is acceptable for any match measured in standard deviations; observations for which no partner within that range in each covariate is found are dropped). The result is stored in the variable `match`.
+
+*Note*: The calculation will take about 15 seconds here.
+
+```{r "6 c)"}
+#< task_notest
+match = GenMatch(Tr=Tr, X=X, caliper = 0.2)
+#>
+```
+
+The output of the function consists of various technical details. We are obviously mostly interested in the resulting matched pairs (`matches`). The following code chunk extracts the result and shows it in the form of a data frame.
+
+```{r "6 c) 2"}
+#< task_notest
+data.frame(ETS_firm_id = match$matches[,1], non_ETS_firm_id = match$matches[,2])
+#>
+```
+
+This table shows us the resulting matched couples. The output also suggests that there are 81 matches, hinting that not all of the 100 ETS firms could be matched successfully (probably because they are outliers and there is no comparable control firm). 
+
+d) Let's spot-check the result to assure the quality of the matching process. For example the output above suggest that firm #4 is matched with firm #1545. We can take a look at those two firms and compare them:
+
+```{r "6 d)"}
+#< task
+fake.firms[4,]
+fake.firms[1545,]
+#>
+```
+
+In this example especially, we can recognize how the matched couple is almost equal in all categories. Another example are the two following firms:
+
+```{r "6 d) 2"}
+#< task
+fake.firms[8,]
+fake.firms[4030,]
+#>
+```
+
+Here, the covariates are not as perfectly matched as before, but you can still see the similarity between the treatment and the control firm before the EU ETS was launched. With this procedure it is possible to construct two new data sets, containing the ETS firm data and the corresponding non-ETS firm data for later comparison.
+
+In this exercise we learned how firms were matched using a function constructed for exactly that purpose. Remember, the goal was to identify firms that are very similar in their pre-2005 characteristics (those who influence the green patenting activity), but with different treatment regarding the regulation under the EU ETS.
+
+Since this was only a demonstration, the next exercise investigates the matched sample from real firm data. Here we are confined to the patenting numbers however, since licensing prevents us from exploring the complete data.
+
+
+## Exercise 7 -- Data analysis of the matched sample
+
+Now that we have learned how the matching was performed, it is time to investigate the real data. As mentioned earlier, the matching can not be done here due to missing data, however the resulting matched data set can partially be shared. 
+
+**Task:** The firm level data of the matched sample is stored in the files `ETS_Firms.rds` and `Non_ETS_Firms.rds`. Define two variables, called `t.firms` and `c.firms` ('t' for 'treatment', 'c' for 'control') and load the corresponding file.
+
+```{r "7"}
+#< task
+# Enter your code here...
+#>
+t.firms = readRDS("ETS_Firms.rds")
+#< hint
+display("Use the 'read.RDS()' command and insert the correct file name.")
+#>
+c.firms = readRDS("Non_ETS_Firms.rds")
+```
+
+a) **Task:** Display the top of both data frames to see which variables are included in the data.
+```{r "7 a)"}
+#< task
+# Enter your code here...
+#>
+head(t.firms)
+#< hint
+display("Use the 'head()' command and show both variables 't.firms' and 'c.firms'.")
+#>
+head(c.firms)
+```
+As you can see, both data frames have the same structure. They contain the patenting history in the two periods 2000-2004 and 2005-2009 for both total and green patents. These are the two periods we will study extensively. Instead of using aggregate data like in previous exercises however, the patents are on firm level. **There is a row for each ETS firm in `t.firms` and the corresponding partner in `c.firms`**.
+
+b) **Task:** Find out how many firms from our original data (5'568 ETS firms) could be matched successfully. In other words, identify the number of rows in `t.firms`. Use the command `dim()` instead of just looking into the data explorer.
+
+```{r "7 b)"}
+#< task
+# Enter your code here...
+#>
+dim(t.firms)
+#< hint
+display("Use the command 'dim() to determine the dimensions of for example 't.firms'.")
+#>
+```
+
+As you can see, 3'428 ETS firms are included in the matched sample. There are two main reasons why not all of the original 5'568 ETS firms could be matched. Firstly, the records for turnover are not complete for all firms, making it impossible to find a match. Secondly, an obvious problem is that there might be no suitable partner for a particular ETS firm. Even though the pool of non-ETS firms is very large and the regulations were applied at the installation level rather than directly to the firm, it is likely that two very similar firms receive the same treatment regarding the regulation as well. Also, we require two matched firms to operate in the same country and economic sector. This reduces the sample of examined ETS firms to 3'428. However, the gain in accuracy and robustness of the resulting estimate outweighs the loss in sample size (Dehejia and Wahba, 1999).
+
+c) Let's start the analysis of our new data set with an exemplary exercise determining some descriptive statistics for a better overview.
+
+#< info "mean()"
+The function `mean()` is self-explanatory. It identifies the mean of a set of values. For example, you can type:
+
+```{r "info mean"}
+a = c(3,6,1,8,0) # Defining a vector
+
+mean(a)
+```
+#>
+
+**Task:** Display the mean of green patents an ETS firm filed in the 5 years before the EU ETS was launched (2000-2004), as well as for the 5-year period after the launch (2005-2009).
+
+```{r "7 c)"}
+#< task
+# Enter your code here...
+#>
+mean(t.firms$green_pat_0004)
+#< hint
+display("Your commands should look the following: mean(...$...)")
+#>
+mean(t.firms$green_pat_0509)
+```
+
+We might get a little impression of the effect of the EU ETS here already, but remember, our first look regarded the aggregate data again. After we assure the quality of the experiment, we will be able to come up with an estimate based on firm-to-firm comparison of the matched couples.
+
+d) You probably noticed the quite low value of the mean of low-carbon patents. It is very common for patent data that most firms do not file any patents at all, which result in a lot of zeros in the data. This fact can be made clear with a frequency count of the number of patents a single firm has filed.
+
+The command `table()` provides a method to count the frequency of all values occurring in the data.
+
+```{r "7d)"}
+#< task
+table(t.firms$green_pat_0004)
+#>
+```
+
+The resulting table shows a value in the first row and the corresponding number of occurrences in the second row. As you can see, the vast majority of all ETS firms have not filed a single green patent in 2000-2004. It is also noticeable that there is a firm that has filed as many as 84 green patents in that span.
+
+**Task:** For a comparison, repeat the command `table()` for the non-ETS firms in 2000-2004.
+
+```{r "7 d) 2"}
+#< task
+# Enter your code here...
+#>
+table(c.firms$green_pat_0004)
+```
+
+In the control group you basically find the same pattern, with most firms inactive in the field of low-carbon technologies before the EU ETS launched in 2005.
+
+If we would like to know how many of our observations fullfil a certain condition (like filing green patents at all), the command `length()` provides a helpful approach.  
+
+#< info "length()"
+The command `length()` is quite simple but still very helpful sometimes. It returns the length of vectors or lists. The following example should explain the usage of the function.
+```{r "info length"}
+a = c(2,0,4,3,1,0)# Defining a vector
+length(a)
+```
+The function `length()` is powerful in data analysis, since you can also include logical expressions. That way you can determine how many of your observations satisfy a certain condition.
+```{r "info length 2"}
+length(a[a>2]) # Returns the number of entries that fulfill the condition
+```
+#>
+
+The following code chunk calculates how many firms (treatment and control) have filed *at least one green patent* 2000-2004.
+```{r "7 d) 3"}
+#< task
+# Enter your code here...
+length(t.firms$green_pat_0004[t.firms$green_pat_0004>0])
+length(c.firms$green_pat_0004[c.firms$green_pat_0004>0])
+#>
+```
+
+Again, you see that those numbers are quite low compared to the number of firms we have data on. We can compare this result to the number of firms which have filed a low-carbon patent in the five years after the launch of the EU ETS (2005-2009) to see whether the program might have encouraged some firms to develop a technology reducing their carbon emissions. 
+
+**Task:** Repeat the calculation above for the time period after the launch and figure out the number of firms protecting at least one green innovation (regulated and unregulated).
+
+```{r "7 d) 4"}
+#< task_notest
+# Here is the code from the chunk above, you might just want to change it a little bit.
+#length(t.firms$green_pat_0004[t.firms$green_pat_0004]>0)
+#length(c.firms$green_pat_0004[c.firms$green_pat_0004]>0)
+#>
+length(t.firms$green_pat_0004[t.firms$green_pat_0509>0])
+#< hint
+display("Just adjust the variable names of the given code to the period 2005-2009.")
+#>
+length(c.firms$green_pat_0004[c.firms$green_pat_0509>0])
+```
+
+#< award "Data Explorer lvl. 2"
+Great, you have calculated even difficult summary statistics of your data!
+#>
+
+Apparently the number of firms that have filed low-carbon patents at all has increased among those regulated by the EU ETS, whereas it has stayed roughly constant for the non-ETS firms. This indicates the effect of the EU ETS for the affected firms. On the other hand, the sheer number of firms filing at least one green patent is not very meaningful for the effect size after all.
+
+In order to summarize the green patenting in our matched sample, we will create a bar plot. The following code chunk plots the number of low-carbon patents for both groups and both periods we are studying. You don't have to solve anything here, simply run the code and take a look at the resulting graph.
+
+```{r "7 d) 5", fig.width=10,fig.height=6}
+#< task
+# Defining the variables as number of green patents in both groups and periods
+a = sum(c.firms$green_pat_0004)
+b = sum(c.firms$green_pat_0509)
+c = sum(t.firms$green_pat_0004)
+d = sum(t.firms$green_pat_0509)
+
+# Generating a bar plot
+barplot(height = c(a,b,c,d),names.arg = c("Non-ETS 00-04","Non-ETS 05-09", "ETS 00-04","ETS 05-09"),col = c("red","red","blue","blue"),ylab = "Number of green patents")
+#>
+```
+
+You can see, the ETS firms in our sample have filed slightly more green patents in the five years before the EU ETS launched (more on that in the next exercise). In the first five years of the program the number of new developed low-carbon technologies seems to have increased more among the ETS firms as well. Notice again however, that this is just a sign of the effect of the EU ETS, since we are looking at aggregate data (of a smaller sample of firms) again.
+
+The next exercise, in which the result of the matching process will be examined, is completely optional. The aim was to eliminate any systematic difference between the two groups of firms by pairing an ETS firm with a non-ETS firm that is very similar in its other characteristics, especially regarding its patenting activity. That way a random experiment can be simulated and an accurate estimate for the treatment effect can be found.
+
+## Exercise 8 -- Theoretical digression - Quality of the matching
+
+This exercise is an optional excursus. It deals with some econometric and statistical details of the matched sample. If you are not interested in the details or do not have the time, you can just skip this entire exercise. The information gained here is not relevant for the further study of the impact of the EU ETS on low-carbon technology.
+
+Our goal in this digression is to compare the ETS firms and non-ETS firms with respect to their pre-2005 characteristics. We would like to know if the matching eliminated most of the systematic differences between the two groups and thus will yield a better estimate for the effect of the EU ETS.
+
+Again, we load the files containing our matched sample of firms:
+```{r "8"}
+#< task
+t.firms = readRDS("ETS_Firms.rds")
+c.firms = readRDS("Non_ETS_Firms.rds")
+#>
+```
+
+As mentioned before, the data on turnover and employment cannot be shared here due to license agreements, so we have to confine ourselves to the patent data that is available. A graphical analysis should already give us an indication of the similarity between regulated and unregulated firms in our matched sample compared to what it was in the whole sample.
+
+a) Total patents
+
+The following code chunk generates a figure plotting the total patents filed by ETS firms and non ETS firms in the five years before the EU ETS. We choose a logarithmic scale here, because many of the values are low (most are even zero as you saw), but there are quite a few outliers as well. We have to add 1 to each observation to avoid a problem with the zeros in the data and adjust the axes accordingly. Take a look at the code and run it.
+
+```{r "8 a)",fig.width=12,fig.height=6}
+#< task_notest
+ggplot()+
+  geom_point(aes(x=log(c.firms$total_pat_0004+1),y=log(t.firms$total_pat_0004+1)),color="blue")+ # Scatter plot of total patents
+  scale_x_continuous(breaks = c(log(1),log(11),log(101),log(1001)), labels = c("0", "10", "100","1000"))+ # x-scale
+  scale_y_continuous(breaks = c(log(1),log(11),log(101),log(1001)), labels = c("0", "10", "100","1000"))+ # y-scale
+  geom_abline(slope=1,color="red",linetype=2)+ # Draw a red line with slope 1
+  xlab("Total Patents by non-ETS firms")+
+  ylab("Total Patents by ETS firms")
+#>
+```
+
+Each point in the graph represents a matched couple of ETS and non-ETS firms with their respective number of total patents. A perfect match would imply that all points lie exactly on the red line, since there would be no difference in the total patenting then. You can already see the similarity in the matched sample by looking at the scatter plot. The points are at least approximately aligned to the line through origin. A statistical test on the equivalence of the empirical distribution of both groups of firms will be discussed later in this exercise.
+
+b) Green Patents
+
+**Task:** Run the code below to create an equivalent graph for the **green patents** 2000-2004.
+
+```{r "8 b)",fig.width=12,fig.height=6}
+#< task_notest
+ggplot()+
+  geom_point(aes(x=log(c.firms$green_pat_0004+1),y=log(t.firms$green_pat_0004+1)),color="green",size=3)+
+  scale_x_continuous(breaks = c(log(1),log(11),log(101)), labels = c("0", "10", "100"))+
+  scale_y_continuous(breaks = c(log(1),log(11),log(101)), labels = c("0", "10", "100"))+
+  geom_abline(slope=1,color="red",linetype=2)+
+  xlab("Green Patents by non-ETS firms")+
+  ylab("Green Patents by ETS firms")
+#>
+```
+
+At first, notice the considerably lower number of data points in the graph. This is due to the fact that not many firms have filed a low-carbon patent at all (as examined in a previous exercise). Therefore it will be harder to make a statistically significant statement about the equivalence of the distributions as well. Nevertheless, you can still see the tendency that ETS firms are matched with non-ETS firms with a similar number of green technology before the EU ETS was launched. 
+
+c) To investigate the empirical distribution of total and green patents and test for equality we will use Wilcoxon's signed-rank test.
+
+#< info "Wilcoxon's sign-ranked test"
+Wilcoxon's sign-ranked test is a nonparametrical hypothesis test to compare two related samples. The basic idea is to test whether the two samples are drawn from the same population. In other words, the null hypothesis of the test is that the two data samples are equal. To apply the test in R, you can use the function `wilcoxsign_test()` from the package `coin`.
+
+```{r "info wilcox", eval=FALSE}
+library(coin)
+
+wilcoxsign_test(x ~ y)
+```
+
+The test calculates a test statistic based on the difference and sign of each paired sample entry. From that test statistic the null hypothesis can be either rejected or not rejected. It is possible that the two compared samples are drawn from the same population, which however is shifted by a constant value. This value is called 'location shift parameter'. For more detailed information on the statistics, have a look at Siegel, Sidney: *Nonparametric statistics for the behavioral sciences* (1988).
+#>
+
+The judgement for equality regarding the characteristics of ETS and non-ETS firms will be the **location shift** parameter as defined for Wilcoxon's sign-ranked test. **If this parameter lies within a certain 'equivalence range', the empirical distributions of both groups are considered as substantially equivalent.** We will follow the convention of letting this range be 0.2 standard deviations of the distribution of the pooled sample (Cochran and Rubin 1973).
+
+At first, we should calculate this equivalence range for both total and green patents. The following code chunk will calculate the standard deviation (`sd()`) of the total patents 2000-2004 for the pooled sample and multiply it by 0.2. *Note:* The function `append()` connects multiple vectors to a single one. 
+
+```{r "8 c)"}
+#< task
+0.2*sd(append(t.firms$total_pat_0004, c.firms$total_pat_0004))
+#>
+```
+
+From that number we can conclude that applying Wilcoxon's sign-ranked test to the total patents, the location shift parameter should be smaller than about 9.3. Thus we will be able to reject the hypothesis that the empirical distribution of the two groups is substantially different and argue that there is no systematic difference between them.
+
+**Task:** Calculate the 'equivalence range' for the green patents. This range is needed to test the equality regarding the low-carbon patenting.
+
+```{r "8 c) 2"}
+#< task
+# Enter your code here...
+#>
+0.2*sd(append(t.firms$green_pat_0004, c.firms$green_pat_0004))
+#< hint
+display("Adapt the calculation of the equivalence range for all patents. Use the command 'append()' and 'sd()' for the calculation and don't forget to multiply your result by 0.2.")
+#>
+```
+
+Analogically we can make the statement that testing for equality in the department of green technology, the location shift parameter should not exceed 0.25.
+
+d) The next step is to find the location shift parameter for the individual firm characteristics. More precisely, we will find a confidence interval (95%) the true parameter lies in. This confidence interval will be called 'critical equivalence range'. If this critical range is contained in the equivalence range we calculated earlier, we can reject the hypothesis of substantial differences in the two groups of firms (at the 5% significance level).
+
+For educational purposes, in this problem set we will perform the determination of the critical equivalence range for **green patents** only, since the run-time of the sign-ranked test is too long for total patents and data on turnover and age of the firms is not available. You will be given the detailed results of those tests as well later on.
+
+In order to find the critical equivalence range, we have to try by hand. The basic idea is to subtract a potential value from the treatment group and test whether the true parameter is smaller than the candidate. To account for the fact that our variable (number of low-carbon patents) is censored at zero, we have to adjust the test accordingly. Let's look at an example to make this clear:
+
+The code chunk below does the following: First, we define a value `mu` we would like to test. Afterwards, we subtract this value from each entry of green patents for the ETS firms and store the result in the vector `a`. Here we have to account for the zeros in our data. Using the function `pmax()`, the larger number of the two arguments is selected. That way there can be no negative entries in the resulting vector. Now we can apply Wilcoxon's signed-rank to the newly calculated vector `a` and the control group `c.firms$green_pat_0004`. In order to use the test for our purpose, we specify it with the alternative hypothesis "less". This means that the true location shift parameter is **lower than the one we proposed** with probability (1-p) (p being the p-value of Wilcoxon's test).
+
+Run the code chunk and take a look at the output by Wilcoxon's test.
+
+```{r "8 d)"}
+#< task
+mu = 3  # equivalence range to be tested
+
+a = pmax(t.firms$green_pat_0004 - mu, 0) # For each entry, select the maximum of (green_pat_0004 - mu) and 0
+
+wilcoxsign_test(a ~ c.firms$green_pat_0004, alternative = "less") # Test the two resulting vectors for equality
+#>
+
+```
+
+First, we recognize the low p-value (<0.01). This means, that the null hypothesis of the test can be rejected and the alternative hypothesis holds true (at the given sign. level). The last line says "true mu is less than 0". We can translate this into "true mu is less than the one we tested", because we have manually applied this mu to our data with accounting for zeros. Since we have specified the alternative hypothesis of the test as "less", the null hypothesis has been that the true parameter is greater than the one we proposed. In this case we can reject this hypothesis.
+
+Take a second to think about the logic behind the hypothesis and tests and answer the following questions:
+
+#< quiz "Null hypothesis of Wilcoxon's test"
+question: Using Wilcoxon's sign-ranked test with 'alternative="less"', what is the null hypothesis?
+sc:
+  - Location shift parameter is lower than 'mu'
+  - Location shift parameter is 'mu'
+  - Location shift parameter is greater than 'mu'*
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< quiz "pvalue of Wilcoxons test"
+question: Finding a p-value<0.05 in the test above, what can we conclude?
+sc:
+  - Location shift parameter is lower than 'mu' with probability > 95%*
+  - Location shift parameter is lower than 'mu' with probability < 5%
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< quiz "Critical equivalence range"
+question: In order to find the critical equivalence range (range the location shift parameter lies in with confidence of 95%), what is the value we have to look for?
+sc:
+  - Lowest value the null hypothesis is not rejected at 5%-level
+  - Lowest value the null hypothesis is rejected at 5%-level*
+  - Highest value the null hypothesis is rejected at 5%-level
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< award "Hypothesis Master"
+Great, you have understood the logic behind the tests!
+#>
+
+When we find the value for which we are just unable to reject the hypothesis that the true parameter is lower, we have the critical equivalence range.
+
+Here is the code from above again. Try out some 'mus' and remember, the goal is to find the value for which the p-value is greater than 0.05 for the first time. You can alter `mu` in steps of 0.01. Find the critical equivalence range for the quiz below (the choices might give you an idea which values to test).
+
+```{r "8 d) 2",optional=TRUE}
+#< task_notest
+mu = 3  # equivalence range to be tested
+
+a = pmax(t.firms$green_pat_0004 - mu, 0) # For each entry, select the maximum of (green_pat_0004 - mu) and 0
+
+wilcoxsign_test(a ~ c.firms$green_pat_0004, alternative = "less") # Test the two resulting vectors for equality
+#>
+#< hint
+display("Try to test a mu around 2.")
+#>
+```
+
+#< quiz "Critical equivalence range Green Patents"
+question: What is the critical equivalence range (5% sign. level) for green patents in our data set?
+sc:
+  - 2.65
+  - 2.28
+  - 1.99*
+  - 1.73
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+Remember, we now found the value for which we are just unable to reject the hypothesis that the location shift parameter is lower. In other words, we have found the 95% confidence interval the true parameter lies in.
+
+This procedure of calculating an equivalence range has to be done for every characteristic of the firms. Due to missing data and run-time issues we did this for the green patents only. The results for all the important variables however can be shared here. The code chunk below creates a table with firm characteristics like turnover, age and patenting records and shows both the equivalence range and the critical equivalence range for the corresponding property. Run the chunk and take a look at the resulting table.
+
+```{r "8 sum"}
+#< task
+table = data.frame(Characteristic = c("Turnover (Mil Euro)","Patents","Green Patents","Year of incorporation"),
+            Equivalence_range = c(523.39,9.30,0.25,5.97),Critical_equivalence_range=c(13.25,1.99,1.99,0.49))
+table
+#>
+```
+
+As mentioned earlier, the empirical distribution of characteristics for both groups is considered to be drawn from the same population if the critical equivalence range is contained in the equivalence range. Looking at the table above, this means that we can reject the hypothesis of substantial differences for all variables except green patents. The reason for the failure to reject differences for green patents is mainly the low number of firms filing low-carbon patents. This should become clear with the following test: We run Wilcoxon's test for the green patent count of treatment and control firms. Since we use no specifications for an alternative hypothesis, it will test the two vectors for equality (mu is equal to zero). Take a look at the output.
+
+```{r " 8 sum 2"}
+#< task
+wilcoxsign_test(t.firms$green_pat_0004 ~ c.firms$green_pat_0004)
+#>
+```
+
+#< quiz "True difference zero for green patents"
+question: Can the null hypothesis be rejected at the 5%-level in this test? Type 'yes' or 'no'. 
+answer: no
+#>
+
+Remember, the null hypothesis of this test was that 'mu' equals zero. While we were unable to reject the hypothesis that the true location shift parameter lies outside of the equivalence range for green patents above, the same test is also unable to reject that the true difference is zero.
+
+Summing up this exercise, we have used statistical methods to ensure the quality of our study. By testing for equality of the characteristics distributions of firms regulated by the EU ETS and those not affected, one can argue that we conducted a quasi-random experiment. This should yield an accurate estimate of the treatment effect, which was our goal after all. Finding the true impact the political intervention (emission trading program) had on technological change.
+
+## Exercise 9 -- Model to estimate the treatment effect
+
+Now that we have made sure the study we are conducting is statistically free of systematic differences between the treatment and control group, we are ready to estimate the treatment effect, which is *the impact of the EU ETS on low-carbon patenting*. Before this is done with the real available data from the matched sample, this exercise should break down how the effect is estimated with a small set of exemplary data.
+
+The fictitious data is generated in the following code chunks. For the numbers we generate here you can basically think of anything, of course in our real data later on this will be the number of low-carbon patents a certain firm filed. You can see the data as follows. The data frame `pre` contains the examined variable for 5 firms of each group in the period before the treatment. The numbers are chosen quite similar, so we can simulate a matched sample like we have in our real data. Simply run the code here.
+
+```{r "9"}
+#< task
+pre = data.frame(pre.tr = c(3,0,6,0,2), pre.ct = c(2,1,5,0,2))
+pre
+#>
+```
+
+The data frame `post` is basically the same, except these are the values of the variable in the period after the treatment.
+
+```{r "9 2"}
+#< task
+post = data.frame(post.tr = c(6,2,10,0,4), post.ct = c(3,1,5,0,1))
+post
+#>
+```
+
+We would like to have all the generated numbers in one table. The command `cbind()` connects a sequence of vectors or data frames as arguments to a single table.
+
+**Task:** Fill in the arguments for the function `cbind()` in the following code chunk. The resulting table `dat` should have a group number, the variable before the policy and the outcome after the treatment in it (in this order).
+
+*Note:* The function `seq()` generates a vector with regular sequences. The arguments are 'from', 'to' and 'by', with the last being the step size (=1 by default).
+
+```{r "9 3"}
+#< task
+# dat = cbind(group_id=seq(1,5),???,???)
+# dat
+#>
+dat = cbind(group_id=seq(1,5),pre,post)
+dat
+```
+
+#< quiz "Treatment effect example"
+question: Just by looking at the numbers in the table, what do you think is the most likely size of the treatment effect?
+sc:
+  - 0
+  - 3*
+  - 6
+  - 10
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+In order to estimate the size effect in the real data later on, we measure the change (00-04 vs. 05-09) in green patenting of each firm in our matched sample. By using the control group as well we account for any time invariant firm-level heterogeneity. The outcomes of the matched control firms are subtracted from those of the ETS firms to obtain the difference-in-differences.
+
+Since patent counts are obviously censored at zero, it seems reasonable to use a Tobit estimator. In our case though, we have to modify the model to account for the large number of zeros in the data (firms filing no low-carbon patent at all). The result is a **Tobit-modified empirical-likelihood estimator** as explained by Rosenbaum (2009).
+
+Normally, estimating a treatment effect, one would search a number that, subtracted from each observation in the treatment group, would equate the distributions of both groups as nearly as possible. This approach however assumes a constant treatment effect for all firms, including those that have not filed a single low-carbon patent. To approach this problem and account for the zeros (firms with no green patent), we have to adjust each difference-in-differences $\Delta$ the following way:
+
+$$\Delta = \textrm{max}((T_t - T_{t-1}) - \tau, -T_{t-1}) - (C_t-C_{t-1})$$
+
+if $\tau$ > 0, and 
+
+$$\Delta = (T_t - T_{t-1}) - \textrm{max}((C_t-C_{t-1})+\tau,-C_{t-1})$$
+
+otherwise. Here, $T_t$ and $T_{t-1}$ are the number of green patents by ETS firms in the treatment period $t$ (2005-2009) and the period before $t$ -1 (2000-2004) respectively. $C_t$ and $C_{t-1}$ are the numbers of the matched non-ETS firms and **$\tau$ is the treatment effect** (the additional low-carbon patents caused by the EU ETS).
+
+We can test different values of $\tau$, and our **point estimate of the treatment effect will be the $\tau$ for which the similarity measure is maximized**. 
+
+Back to our example. We would like to apply the estimate to the data we generated above. The following code chunks proposes a treatment effect of $\tau$ = 1 (which is too low) and generates the two vectors `trt` and `ctrl` according to the formula above.
+
+```{r "9 4"}
+#< task
+tau = 1 # Possible treatment effect
+trt = pmax((dat$post.tr-dat$pre.tr)-tau, -dat$pre.tr) # subtract the treatment effect and account for zeros
+ctrl = dat$post.ct - dat$pre.ct  # difference of the control group
+#>
+```
+
+We use the p-value calculated from Wilcoxon's signed-rank test as similarity measure again:
+
+```{r "9 5"}
+#< task
+wilcoxsign_test(trt~ctrl, distribution = "exact") # test if the resulting distributions are equal
+#>
+```
+
+As you can see, the result of the test shows a low p-value. Therefore we can reject the hypothesis that the true treatment effect is 1 (at the significance indicated by the p-value).
+
+If you like to, you can try different values for $\tau$ in the code chunk below to get a feeling for the way the estimation works. Remember, a low p-value indicates that you can reject the hypothesis that your treatment effect is correct.
+
+```{r "9 6", optional=TRUE}
+#< task_notest
+tau = 1 # Possible treatment effect
+trt = pmax((dat$post.tr-dat$pre.tr)-tau, -dat$pre.tr) # subtract the treatment effect and account for zeros
+ctrl = dat$post.ct - dat$pre.ct
+
+wilcoxsign_test(trt~ctrl, distribution = "exact") # test if the resulting distributions are equal
+#>
+```
+
+Testing individual treatment effects 'by hand' is not very efficient in order to find a point estimate for $\tau$. Instead, a loop (for-loop) is an elegant way to test a range of different treatment effects. The output of this loop should be a table with possible treatment effect sizes $\tau$ and their corresponding p-value. For every $\tau$ the vectors `trt` and `ctrl` are calculated according to the formula above and the result is tested via Wilcoxon's signed-rank test. Take a close look at the code chunk (you will need some knowledge for a later exercise) and run it afterwards. 
+
+```{r "9 7"}
+#< task_notest
+p.values = vector()
+
+for (i in seq(from = 0, to = 6, by = 0.1)) { # Compute the p-value for each tau in the range [0,6].
+  tau=i
+  trt = pmax((dat$post.tr - dat$pre.tr) - tau, -dat$pre.tr) # subtract the treatment effect and account for zeros
+  ctrl = (dat$post.ct - dat$pre.ct) # difference in the control group
+
+  p.values = append(p.values, pvalue(wilcoxsign_test(trt ~ ctrl, distribution = "exact"))) # test if the resulting distributions are equal, save the p-value of Wilcoxon's test into the vector 'p.values'
+}
+
+p.values = data.frame(tau=seq(from=0, to=6, by=0.1), p.values=p.values) # Table containing 'tau' and the corresponding p-value
+p.values
+#>
+```
+
+You can see, the resulting table contains the p-value for every $\tau$ in the range we specified. We would like to plot those p-values.
+
+**Task:** Complete the code chunk below to plot the p-values from the loop above. 
+
+```{r "9 8",fig.width=10,fig.height=5}
+#< task
+#ggplot(???)+
+  #geom_line(aes(x=???,y=???))
+#>
+ggplot(p.values)+
+  geom_line(aes(x=tau,y=p.values))
+```
+
+You can see how the distribution has a maximum at $\tau$ = 3 and effect sizes differing a lot from that are very unlikely. In fact, our point estimate for $\tau$ will be the one with the highest p-value. The next code chunk will compute this value from the table `p.values` we created by the for-loop.
+
+```{r "9 9"}
+#< task
+pe = p.values$tau[p.values[,2]==max(p.values[,2])] # Point estimate, p.values[,2] means the second column of p.values
+pe
+#>
+```
+
+#< award "Effect estimator lvl. 2"
+Great, you estimated the treatment effect using the Tobit-modified empirical-likelihood estimator for an exemplary set of data!
+#>
+
+From the analysis we did we can conclude that our point estimate for the treatment effect size $\tau$ for the fictitious data is equal to 3 units of the examined variable.
+
+To summarize this exercise: In order to use this method further and transfer it to other data sets (like the real matched sample of ETS and non-ETS firms), a function conducting the estimation would be very helpful. This function is adapted from the work of Calel and Dechezlepretre for "Environmental Policy and Directed Technological Change".
+
+**Task:** Write such a function (named `tobit.wilcox`) with the help below. This function should be given the patenting records of both groups of firms for the period before the treatment as well as afterwards (`pre.trt`, `post.trt`, `pre.ctrl`, `post.ctrl`). Additionally, a functions argument should be the range of possible effect sizes (`effect.min`, `effect.max`, `step`). The output should be a data frame like the one above, containing the tested effect sizes and their corresponding p-value. Use the knowledge you gained from the previous exercise like the usage of the for-loop. Also, the loop before only estimated positive effect sizes ($\tau$ >= 0). Take a look at the formulas for the difference-in-differences for negative effect sizes as well, so that your function can deal with that, too (use 'if(...){...}' for the two cases). Uncomment all lines and fill in all '???' with the correct code pieces. Remember,
+$$\Delta = \textrm{max}((T_t - T_{t-1}) - \tau, -T_{t-1}) - (C_t-C_{t-1})$$
+if $\tau$ > 0, and 
+$$\Delta = (T_t - T_{t-1}) - \textrm{max}((C_t-C_{t-1})+\tau,-C_{t-1})$$
+otherwise.
+
+```{r "9 10""}
+#< task
+#tobit.wilcox = function(pre.trt, post.trt, pre.ctrl, post.ctrl, effect.min, effect.max, step = 0.1) {
+	#p.values = vector()
+	#for (i in seq(from = ???, to = ???, by = ???)) { # Compute p-value for each tau in the range [effect.min,effect.max].
+		#tau = i
+		
+		#if (tau>=0) {
+			#trt = pmax((??? - ???) - tau, -???)
+			#ctrl = (??? - ???)
+		#}
+		#if (tau<0) {
+			#trt = (??? - ???)
+			#ctrl = pmax((??? - ???) + tau, -???)
+		#}
+		#p.values = append(p.values, pvalue(wilcoxsign_test(??? ~ ???)))
+	#}
+	#data.frame(tau=seq(from = ???, to = ???, by = ???), p.values=???)
+#}
+#>
+tobit.wilcox = function(pre.trt, post.trt, pre.ctrl, post.ctrl, effect.min, effect.max, step = 0.1) {
+	p.values = vector()
+	for (i in seq(from = effect.min, to = effect.max, by = step)) { # Compute p-value for each tau in the range [effect.min,effect.max].
+		tau=i
+		
+		if (tau>=0) {
+			trt = pmax((post.trt - pre.trt) - tau, -pre.trt)
+			ctrl = (post.ctrl - pre.ctrl)
+		}
+		if (tau<0) {
+			trt = (post.trt - pre.trt)
+			ctrl = pmax((post.ctrl - pre.ctrl) + tau, -pre.ctrl)
+		}
+		p.values = append(p.values, pvalue(wilcoxsign_test(trt ~ ctrl)))
+	}
+	data.frame(tau=seq(from = effect.min, to = effect.max, by = step), p.values=p.values)
+}
+```
+
+#< award "Function writer"
+Good job, you wrote your own function to estimate the treatment effect size for any set of data!
+#>
+
+## Exercise 10 -- Estimating the treatment effect with the matched sample
+
+In this exercise, the method of estimating the size of the treatment effect shall be applied to the real patent data of the matched sample. From the estimate $\tau$, which is **the number of additional low-carbon patents per firm** (accounting for zeros), we will be able to calculate the increase in low-carbon technologies that is attributed to the environmental policy of launching an emission trading program.
+
+At first, we are going to load our data again. Remember, the files contain the patenting history for ETS and non-ETS firms, which will serve as treatment and control group in our estimation.
+
+```{r "10"}
+#< task
+t.firms = readRDS("ETS_Firms.rds")
+c.firms = readRDS("Non_ETS_Firms.rds")
+#>
+```
+
+Remember, the function `tobit.wilcox()` we developed in the last exercise uses the numbers for both groups of firms and periods to test a specified range of possible treatment effect sizes. The output is a data frame, in which each tested $\tau$ is listed along with its p-value from Wilcoxon's signed-rank test (as similarity measure).
+
+a) In order to call the function `tobit.wilcox()`, you have to specify the parameters, especially the patenting records for both groups and periods. For simplification, we define those numbers of green patents as variables a-d. Run the code chunk and keep in mind that you will have to use the variables for the estimation.
+
+```{r "10 a)"}
+#< task
+a = t.firms$green_pat_0004 
+b = t.firms$green_pat_0509
+c = c.firms$green_pat_0004
+d = c.firms$green_pat_0509
+#>
+```
+
+#< quiz "Test variables"
+question: Which of the variables denotes the green patents of the non-ETS firms before the EU ETS was launched (pre.ctrl)?
+sc:
+  - a
+  - b
+  - c*
+  - d
+  
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< quiz "Test variables 2"
+question: Which of the variables denotes the green patents of the ETS firms after the EU ETS was launched (post.trt)?
+sc:
+  - a
+  - b*
+  - c
+  - d
+  
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+b) Since the function `tobit.wilcox()` can possibly use serious run-time (depending on the range and step size), we should get a rough idea of our estimation of the treatment effect $\tau$ first.
+
+**Task:** The code chunk below calls the function `tobit.wilcox()` with the correct patenting records as arguments, as well as a tested range from $-5$ to $10$ with a step size of $1$. The resulting data frame is assigned to the variable `p.rough` and shown afterwards.
+
+*Note:* The calculation will take about 10 seconds here. 
+
+```{r "10 b)"}
+#< task_notest
+# Enter your code here...
+p.rough = tobit.wilcox(pre.trt=a, post.trt=b, pre.ctrl=c, post.ctrl=d, effect.min=-5, effect.max=10, step=1)
+p.rough
+#>
+#< hint
+display("Type 'tobit.wilcox(...)' and use the variables we defined above as arguments as well as the correct range and step size.")
+#>
+
+```
+
+Looking at the p-values in the table above, you can already get an idea which values for $\tau$ are of interest. To make this more visual, we can plot the effect sizes with their respective p-values.
+
+**Task:** Plot the p-values of the tested effect sizes in `p.rough` with the function `ggplot()`. Also, the graph should have a line at y = 0.05 to indicate the significance and determine a confidence interval later on.
+
+```{r "10 b) 2",fig.width=10,fig.height=6}
+#< task
+#ggplot(p.rough)+
+  #geom_line(aes(x=tau,y=p.values))+
+  #geom_abline(slope=???, intercept=???, lty=3)
+#>
+ggplot(p.rough)+
+  geom_line(aes(x=tau,y=p.values))+
+  geom_abline(slope=0, intercept=0.05, lty=3)
+#< hint
+display("Fill in the correct parameters (slope and intercept) for the line y = 0.05.")
+#>
+```
+
+The graph shows that effect sizes of $\tau$ <0 and values considerably higher than 5 are highly unlikely. So we can narrow down the search for the point estimate and continue with an accurate investigation of that range.
+
+c) Let's take a closer look and estimate the effect more precisely (meaning a smaller step size for $\tau$).
+
+**Task:** `tobit.wilcox()` is called again and the result is stored in the variable `p`. We estimate the effect size from $0$ to $6$ with a step size of $0.1$ and show `p` afterwards.
+
+*Note:* The calculation will take about 20 seconds here.
+
+```{r "10 c)"}
+#< task_notest
+p = tobit.wilcox(pre.trt=a, post.trt=b, pre.ctrl=c, post.ctrl=d, effect.min=0, effect.max=6, step=0.1)
+p
+#>
+#< hint
+display("Type 'tobit.wilcox(...)' and use the variables we defined above as arguments as well as the correct range and step size.")
+#>
+```
+
+The resulting table shows all tested treatment effects with their corresponding p-value. Again, a visual impression of the result would be helpful.
+
+The code chunk below creates a graph of the p-values stored in `p` using the function `ggplot()` like in the previous example. There is also a line (lty=3) at y = 0.05 indicating the significance level.
+```{r "10 c) 2",fig.width=10,fig.height=6}
+#< task
+ggplot(p)+
+  geom_line(aes(x=tau,y=p.values))+
+  geom_abline(slope=0,intercept = 0.05, lty=3)
+#>
+#< hint
+display("Use the command 'ggplot(p)+' and draw the two lines like in the example above ")
+#>
+```
+
+The resulting graph shows the p-values for the interval (0,6), from which we can infer our estimate and a 95% confidence interval. Since we implement a maximum-likelihood estimator as mentioned before, the point estimate of the treatment effect will be the one with the highest p-value.
+
+**Task:** Find and display this value by using the data frame `p`, where the p-values are stored. 
+
+```{r "10 d)"}
+#< hint
+display("Find the effect size (p$tau) with the highest p-value (p[,2]==max(p[,2]))")
+#>
+#< task
+# Enter your code here...
+# pe = ???[???==???]
+# pe
+#>
+pe = p$tau[p[,2]==max(p[,2])]
+pe
+```
+
+As you probably could tell from looking at the graph above, the treatment effect with the highest p-value and therefore our point estimate is $\tau$ = 2.
+
+#< quiz "Confidence interval of tau"
+question: Looking at the graph above, what is the 95% confidence interval for our estimate?
+sc:
+  - (0,6)
+  - (1,5)*
+  - (2,3)
+  - (2,5)
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+#< award "Effect estimator lvl. 3"
+Great, you estimated the treatment effect with a real data set!
+#>
+
+We can conclude that, using the matched sample for a "random experiment", the estimation of the effect of the EU ETS yielded an **estimate of $\tau$ = 2 additional low-carbon patents** for ETS firms filing such patents, with a 95% confidence interval of (1,5).
+
+Now we should be able to put this estimate in perspective. The next exercise examines the resulting total change in low-carbon patenting caused by the EU ETS.
+
+## Exercise 11 -- The direct impact of the EU ETS
+
+In this exercise, you will be asked to perform several calculations to quantify the impact of the EU ETS on directed technological change. Remember, we already did a naive estimation of the effect in an earlier exercise using the complete sample of available firm data. Later on we should be able to compare those results to the new estimation using the treatment effect for the matched sample.
+
+First, we will load the data set again, and set the parameter `tau` to 2 (size of the treatment effect, additional low carbon patents per regulated firm). 
+
+```{r "11"}
+#< task
+t.firms = readRDS("ETS_Firms.rds")
+c.firms = readRDS("Non_ETS_Firms.rds")
+
+tau = 2 # point estimate of the treatment effect
+#>
+```
+
+a) We would like to calculate the number of additional low-carbon patents within the matched sample. In order to do that, we apply the treatment effect $\tau$ to each ETS firm $i$ and account for the fact that the minimum number of patents is zero. Hence, the added patents can be calculated by the formula
+
+$$\Delta\textrm{pat} = \sum_i T_{t,i} - \textrm{max}(T_{t,i}-\tau,0)$$
+with $T_{t,i}$ being the number of green patents of the treatment firms after the ETS.
+
+**Task:** Compute the number of additional low-carbon patents for the ETS firms in the matched sample (`t.firms`). Use the formula above and complete the code fragment below. As a little help, I have defined the vector `b` as the actual numbers of green patents the ETS firms filed from 2005 to 2009. 
+
+```{r "11 a)"}
+#< task
+# Enter your code here...
+b = t.firms$green_pat_0509 # outcome of the ETS firms
+
+#sum(??? - pmax(??? - ???,???))
+#>
+sum(b - pmax(b - tau, 0))
+#< hint
+display("Use the formula above with T_(t,i) being the vector 'b'.")
+#>
+```
+
+b) As you should recall, the additional green patents of 84 are related to the **matched sample**, which does not include all existing ETS firms. If we assume the same estimate of $\tau$ = 2 for the remaining firms as well, we can use their patenting records to come up with the real number of added patents. In other words, extrapolating to all ETS firms will give us the green patents that are caused by the introduction of the EU ETS according to our model.
+
+The data set `ETSpatent_counts.RData` contains the patenting records for all 5'568 ETS firms. We will be able to use the data in the same way as above to come up with the number of additional patents.
+
+```{r "11 b)"}
+#< task
+load("ETSpatent_counts.RData")
+head(ETSpatent_counts)
+#>
+```
+
+**Task:** Compute the number of low-carbon patents that can be directly attributed to the EU ETS in the five years since its launch (`added.green`). Again, you have a vector `x` with the number of green patents for each firm 2005-2009. Remember, 
+
+$$\Delta\textrm{pat} = \sum_i T_{t,i} - \textrm{max}(T_{t,i}-\tau,0)$$
+
+```{r "11 b) 2"}
+#< task
+# Enter your code here...
+x = ETSpatent_counts$green_pat0509
+#added.green = sum(??? - pmax(??? - ???, ???))
+#added.green
+#>
+added.green = sum(x - pmax(x - tau, 0))
+added.green
+```
+
+#< quiz "Added lowcarbon patents extrapolated to all ETS firms"
+question: Using the point estimate, what is the number of low-carbon patents among all 5'568 ETS firms, that are added by the EU ETS? 
+answer: 183
+#>
+
+We can draw the conclusion that the ETS firms in total would have filed 183 less low-carbon patents in a scenario without the EU ETS. To put this in perspective, we should calculate the relative increase in low-carbon patents among ETS firms. The variable `actual.green` contains the sum of all low-carbon technologies developed by ETS firms in the five years since the EU ETS.
+
+**Task:** Compute the increase of low-carbon patents in the five years after the EU ETS among ETS firms in percent.
+
+```{r "11 b) 3",optional=TRUE}
+#< task
+# Enter your code here...
+actual.green = sum(ETSpatent_counts$green_pat0509) # actual number of green patents
+
+#100* ...
+#>
+#< hint
+display("Use the variables 'added.green' and 'actual.green' to calculate the increase.")
+#>
+#< notest
+100*(added.green/(actual.green-added.green))
+#>
+```
+
+#< quiz "Increase among all ETS firms"
+question: What is the increase in low-carbon patents among all 5'568 ETS firms that is caused by the EU ETS?
+sc:
+  - 3.9%
+  - 9.1%*
+  - 16.5%
+  - 24.2%
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+This sure seems like a strong impact on the ETS firms, and the EU ETS looks like a powerful tool to direct the technological change towards clean technology. If we transfer this finding to all firms and patents however (those who are not regulated by the EU ETS), our estimate might get a little dampened. 
+
+c) **Task:** The total number of green patents 2005-2009 (this was calculated from the data in an earlier exercise) from all kinds of firms is stored in the variable `epo.green.0509`. Using this and `added.green`, compute the increase in low-carbon patents registered at the EPO.
+
+```{r "11 c)",optional=TRUE}
+#< task
+epo.green.0509 = 22030 # total number of green patents filed at the EPO
+
+#100* ...
+#>
+#< notest
+100*(added.green/(epo.green.0509-added.green))
+#>
+```
+
+#< quiz "Increase of green patents for EPO"
+question: What is the increase in low-carbon patents registered at the EPO in the five years after the launch of the EU ETS?
+sc:
+  - 0.84%*
+  - 1.36%
+  - 1.58%
+  - 2.62%
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+Since the ETS firms only account for a small portion of the total low-carbon patents, the remarkable impact on the first look translates into a boost of clean technology of only about 0.84%. In other words, provided the robustness of our finding (we will discuss that later), in a business-as-usual scenario without the EU ETS, **the number of new technologies for carbon emission reduction would have been lower by less than 1%**.
+
+As you might recall, we already did a naive estimation of the impact of the EU ETS in a previous exercise. For a good overview, the results are put together in the table `results`, together with the more reasonable estimation we conducted with the matched sample. These are the main results of the whole investigation we did.
+
+```{r "11 c) 2"}
+#< task
+results
+#>
+```
+
+Even though the naive estimates show the same pattern, they substantially overestimate the true impact of the EU ETS. However, other than predicted by early critics of the program, we still find a positive effect on low-carbon patenting activity among ETS firms. On the other hand, as we have seen, this remarkable response by those firms (9.1% increase in green patents due to EU ETS) translates into a rather small effect from a bigger perspective. An increase of less than 1% in low-carbon patenting seems quite low.
+
+Put differently, we can say that looking at the increasing development of low-carbon technologies post-2005 (exercise 3), the EU ETS is responsible for **roughly 2% of this surge** (the number of green patents increased by 9'054 from 2005-2009, 183 'EU ETS patents' represent 2% of that). This small impact however is not just a calculative result of the small number of ETS firms compared to the rest, which is demonstrated by the fact that the naive estimate is more than three times higher. Compared to the overall pace of technological change in Europe, the boost by the EU ETS seems rather minor.
+
+d) The goal of the EU ETS was to *direct* the technological change towards low-carbon solutions, so naturally we have to look at the impact on other technologies as well. Even if some patents are not classified as low-carbon, they might be complementary to those and therefore still be beneficial for the intent of the EU ETS. On the other side, it is also imaginable that an increase in green innovation might displace the development of other technologies (Popp and Newell, 2012).
+
+Since the data on other patents in our matched sample is available, we can conduct the same impact study for those, too. You should not replicate this task in this problem set, because it is completely analog to the estimation we already did for low-carbon patents (tobit.wilcox estimation, calculating additional patents etc.). Instead, only the results of the estimation are presented here.
+
+The function `tobit.wilcox()` yields an estimate of $\tau$ = 1 additional other patent on average. Extrapolated to all 5'568 ETS firms, this translates to 554 other patents caused by the EU ETS, which amounts to a 0.77% increase among the ETS firms or a 0.074% increase for the EPO in 2005-2009.
+
+As expected, the EU ETS had a significantly higher impact on low-carbon innovation (9.1% vs. 0.77% among ETS firms). But still it has not crowded out the development of other technologies.
+
+## Exercise 12 -- Robustness of the result
+
+The fairly small impact on directed technological change of the EU ETS estimated in the previous exercises questions the whole purpose of the program. Could there be reasons that our estimation is biased and generally underestimates the true effect of the scheme? In this exercise we will discuss the robustness of our finding that the EU ETS has had at best a limited impact on low-carbon innovation.
+
+**1. Omitted variable**
+
+As discussed earlier, in an impact study with treatment and control group it is necessary to eliminate any systematic difference between the two. This should apply not only to the observed variables, but also to the unobserved characteristics. Since we used matching to create similarity on the basis of certain selected observables, we can not rely on the law of large numbers (like in randomized experiments) to on average get rid of differences in unobserved variables.
+
+One observable left out for the matching but likely with impact on patenting is the number of employees of a firm. The figure below shows a plot of the number of employees for the non-ETS firms and their corresponding partners that were regulated.
+
+![](employees matched sample.jpg)
+
+
+Source: Calel, Dechezlepretre (2012). Environmental policy and Directed Technological Change. Ch. 4.
+
+#< quiz "Number of employees"
+question: Do you suspect a significant difference in the distribution of employees for the treated and control firms? Type 'yes' or 'no'.
+answer: no
+#>
+
+Even though the ETS firms have slightly more employees on average, a statistical test (Wilcoxon) rejects the hypothesis of a substantial difference between the two groups (Equivalence range: 904.07, critical eq. range: 106.75). At least in this characteristic matching achieved a balance in the two groups, suggesting that other unobserved characteristics might have been balanced as well.
+
+Let us think about the kind of variables that might still concern us and challenge our result. One could imagine a characteristic of ETS firms in the sample that was not used to construct the matching, reducing the increase in low-carbon patenting. This variable would therefore be positively correlated with the ETS regulation and negatively correlated with low-carbon patenting and lead to an underestimation of the impact of the EU ETS (a variable correlated vice versa would have the same effect). As an example:
+
+#< quiz "Variable leading to underestimation"
+question: Can you think of a variable correlated with the participation in the EU ETS and green patenting in a way that would cause an underestimation of the treatment effect?
+sc:
+  - Level of carbon emissions prior to 2005
+  - Coverage by a complementary carbon policy for mostly non-ETS firms*
+  - Economic sector the firm operates in
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+So there might be a variable causing a biased estimate. The authors of "Environmental policy and directed technological change" have calculated how large this bias would have to be to alter the estimate we got to some larger alternative. In order to boost the number of low-carbon patents at the EPO by just 1%, the treatment effect for the matched sample would have to be $\tau$ = 20.4 additional low-carbon patents. They can very confidently reject the hypothesis that there is a variable (for example policy) causing such a systematic difference between the two groups to justify a treatment effect 10 times higher than the original estimate.
+
+In summary we can be confident that most characteristics are balanced between treated and control firms. Even if that is not entirely the case, our estimate is robust to omitted variable biases.
+
+**2. Selection bias**
+
+As you recall, in order to come up with the total number of low-carbon patents that can be attributed to the EU ETS, we extrapolated our estimate ($\tau$ = 2) from the 3'428 matched firms to all ETS firms. The assumption behind that is obviously that this estimate applies to those firms as well. If on the other hand we expect a systematic stronger response to the EU ETS by the firms with no match, this leads us to underestimate the true impact of the program. 
+
+Remember, in practice some firms could not be matched because important data (mostly turnover numbers) were missing. Therefore this would not cause a problem. On the other hand, some firms could not be matched because there simply was no non-ETS firms with characteristics (e.g. patenting numbers) similar enough. We can conclude that these unmatched firms were probably outliers and therefore are likely to have higher patenting levels on average.
+
+#< quiz "Selcetion bias leads to underestimation"
+question: If unmatched firms really have a significantly higher patenting level prior to 2005, what does this mean for our estimate?
+sc:
+  - It underestimates the impact of the EU ETS*
+  - It overestimates the impact of the EU ETS
+  - This has no effect on the estimate
+success: Great, your answer is correct!
+failure: Try again.
+#>
+
+A higher patenting level in this case means that there are less firms with no green patent at all. This would lead to a stronger response among the unmatched firms and an underestimation of the impact of the EU ETS.
+
+Using the same procedure like in a previous exercise the authors tested the two groups (matched an unmatched ETS firms) for equality in the distribution of their characteristics. For other patents, we are able to reject the hypothesis of substantial differences (eq. range = 34.52, crit. eq. range = 1.99), but like earlier we are unable to reject for low-carbon patents (eq. range = 0.72, crit. eq. range = 1.99). This failure to reject a significant difference comes from the relative rarity of low-carbon patents again. As for the sectoral composition of matched and unmatched firms, all economic sectors with some unmatched firms are well-represented among the matched firms as well.
+
+We can conclude that matched and unmatched firms are obviously not identical, the tests however suggest that the matched sample is a good representation for all ETS firms and it is reasonable to extrapolate the found estimate to them.
+
+Another concern about selection bias might be the fact that our data set did not cover every installation regulated by the EU ETS, it contained 9'358 of 12'122 installations. For external validity, we can calculate the theoretical out-of-sample response that would be necessary to achieve a higher impact. For a boost of say 5% in low-carbon patenting, the ETS firms together would have had to file 1'062 additional low carbon patents in 2005-2009.
+
+**Task:** In the following code chunk, first the number of out-of-sample installations (`rest.install`) is calculated. After that we define the number of ETS firms and the estimated number of additional patents in our sample (`sample.firms`, `sample.add`). The following two lines calculate how many additional patents this leaves to the out-of-sample firms in order to achieve the 5% boost in low-carbon patenting (`rest.add`). From those numbers, calculate *how many additional patents a firm in the sample has filed on average* (`sample.resp`). Assuming that the remaining installations are operated by one firm each (charitable assumption), calculate their response in order to achieve the 5% boost as well (`rest.resp`, average additional green patent per firm). 
+
+```{r "11 1"}
+#< task
+rest.install = 12122 - 9358
+
+sample.firms = 5568
+sample.add = 183
+
+tot.add = 1062
+rest.add = tot.add - sample.add
+
+# sample.resp = ???
+# rest.resp = ???
+
+# sample.resp
+# rest.resp
+#>
+sample.resp = sample.add / sample.firms
+rest.resp = rest.add / rest.install
+
+sample.resp
+rest.resp
+```
+
+As you can see, the response of the remaining firms would have to be at least 10 times higher than the in-sample response. This seems especially unlikely if one considers the fact that most of the out-of-sample firms operate in countries with lower levels of green technology to begin with (Greece, Hungary, Cyprus, Italy, Latvia and Slovenia).
+
+From the test and the calculation above we can infer that our (matched) sample is a good representation of all existing ETS firms. Thus our earlier estimate seems to be valid beyond our sample.
+
+**3. Other robustness tests**
+
+Since there still might be some explanation why the estimated impact of the EU ETS is so limited, the authors have investigated different explanations as well:
+
+- Maybe the non-ETS firms are also strongly responding to the launch of the EU ETS, because they might be in direct competition to the ETS firms. A match of the ETS firms with similar firms from Norway, Switzerland, Bulgaria and Romania (which did not participate in the EU ETS in 2005) however, returns no significantly different estimate of the treatment effect.
+
+- Is it possible that the main response to the EU ETS has occurred before its launch in 2005? It is imaginable that firms have increased their effort to develop low-carbon innovations in anticipation of higher costs of carbon emissions (when the program was announced, or the Directive was adopted in 2003). Re-estimating the effect with 2003 as treatment year however yields no significant difference in low-carbon patenting of ETS and non ETS firms. In other words, the treatment effect for this period is not significantly different from zero.
+
+- The sheer number of low-carbon patents might not be meaningful enough to really measure the technological change. A higher quality of the patents might cause a higher impact than we have estimated. To address this, the quality of a patent is measured by its family size and number of its citations. Weighting the patents that way does not change the result however, and there is no evidence that the quality of patents of ETS firms has improved relative to those of the non ETS firms.
+
+- Maybe the indirect impact of the EU ETS is strong compared to the direct effect for ETS firms. Third-party firms could possibly respond to the EU ETS and develop low-carbon technologies in the hope of selling or licensing them to ETS firms. It is not very compelling that this effect is large, since economic theory predicts the policy to provide more incentives to firms directly regulated and ETS firms are usually ones with above average innovation capabilities themselves. Still, the indirect impact was tested with a set of non-ETS firms that have filed at least one patent jointly with an ETS firm. These 'co-patenters' were compared to similar non-ETS firms (no co-patenters). A treatment effect of $\tau$ = 0.99 additional low-carbon patents is estimated, with a 95% confidence interval of (-0.99,1.99). Therefore one can not state any positive net impact with confidence. And, similarly to earlier, even taking the point estimate at face value would translate into a very small impact on a larger scale.
+
+**Summary**
+
+All in all it appears that our earlier finding is very robust to any challenge proposed in this exercise. There seems to be no alternative explanation of the result than the very limited impact of the EU ETS. Certainly, the EU ETS has had a positive and significant impact on the firms directly affected by the policy. Those firms have increased their effort to develop technologies that reduce carbon emissions. Yet this impact is almost negligible on a European scale.
+
+## Exercise 13 -- Conclusion
+
+In this problem set, we have investigated the impact of the "European Emission Trading Scheme" (EU ETS) launched in 2005 on directed technological change. As for many environmental policies, the most important aim of the program was to encourage the development of innovations, in this case low-carbon technologies in order to achieve the ambitious long-term goals of the EU (European Commission, 2005). By putting a price on carbon emissions, firms should be encouraged to come up with developments reducing those emissions.
+
+We conducted an impact study to assess the policies success in the 5 years after its launch. An early casual look at the aggregate patent data seemed very promising. The number of patents protecting a low-carbon technology in Europe has risen rapidly in the years after 2005. The challenge however was to isolate the effect of the EU ETS on this surge, because the aggregate data did not factor in any external effects that could have influenced the patenting behaviour of firms (like increasing oil price). The solution was a matched difference-in-differences study, where similar firms in their pre-2005 characteristics were compared after the launch of the program. Of course one of the matched firms had to be regulated by the EU ETS, whereas the other should not be influenced by the policy.
+
+Our results suggest a quite strong impact on the firms regulated under the EU ETS. The difference-in-differences estimate extrapolated to all over 5'000 ETS firms yields an increase of 9.1% in low-carbon patenting in the 5 years following the launch. It is remarkable that, even though permits were likely over-allocated in the first phase, the response from regulated firms was quite strong. Furthermore it is noticeable that the low-carbon patents have not crowded out the development of other technologies, as we measure an increase (attributed to the EU ETS) of 0.77% of other patents for those firms. However, because of the targeted nature of the scheme, the increase in patenting translates to a quite unremarkable economy-wide effect. Only about 1 in 5'500 firms in our data were regulated by the EU ETS, which leads to a low-carbon patents increase of only 0.84%. As for the other patents, we can attribute a rise of 0.074% to the EU ETS. This seems like a very small response compared to the overall pace of technological change, as the EU ETS is responsible for about 2% of the post-2005 surge in low-carbon patents.
+
+We have to recognize on the other hand that the mere number of filed patents at the EPO does not reflect every detail that is part of a technological change. Patent counts do not consider strategies or capital investments of firms for existing technologies or future research. If data on those factors would be available, future research could measure technological change in those regards and maybe identify a greater effect coming in the future.
+
+Our findings are also supporting the findings of related literature, as others identify a directed technological change by environmental policies as well. Other studies find as well that cap-and-trade programs often have a limited role because they target a relatively small number of firms, whereas other policies might have a low effect on an individual firm, but lead to a greater economy-wide effect, because more parties are affected. It is the future task of politics to compare the relative costs and benefits of different policies to come up with the best strategy.
+
+There were also some questions we could not answer that would be interesting for future research in judging environmental policies. What if the emission permits were not allocated for free but auctioned? One could imagine that we would measure a greater effect if the price of the permits was higher. So far the rules of the emission trading scheme have not changed, but if they would, the new situation could be compared to the first phase and the impact of different scenarios could be measured. Another question would be what the driving forces leading to the post-2005 surge in low-carbon patenting were. If we could study factors like external shocks or other policies (e.g. renewable energy policies) in further detail, we might get a better understanding of their impact and an idea of the influence we could exert.
+
+The EU ETS provides a good possibility to learn from for policy makers all over the world. Maybe a modified version of the cap-and-trade system will yield better results. So far most of the emission reduction has come from operational changes like fuel switching. In order to reach the goals of the EU more low-carbon technologies are needed. We can conclude that the system in its current form does not provide enough economy-wide incentives to achieve an impact on a larger scale.
+
+## Exercise 14 -- References
+
+### Bibliography
+- Calel, Raphael and Dechezlepretre, Antoine (2012). "Environmental Policy and Directed Technological Change - Evidence from the European carbon market", Centre for Climate Change Economics and Policy, Working paper 87.
+- Chow, G (1960). "Tests of Equality Between Sets of Coefficients in Two Linear Regressions", Econometrica.
+- Cochran, W. and Rubin, D. (1973). "Controlling bias in observational studies: A review", Sankhya: The Indian Journal of Statistics, Series A
+- Dechezlepretre, A. et al. (2011). "Invention and transfer of climate change-mitigation technologies", Review of Environmental Economics and Policy, 5.
+- Dehejia, R. and Wahba, S. (1999). " Causal effects in nonexperimental studies: Reevaluating the evaluation of training programs", Journal of the American Statistical Association, 94.
+- Dernis, H. et al. (2001). "Using patent counts for cross country comparison of technology output", STI Review 27.
+- Doran, H. (1989). "Applied Regression Analysis in Econometrics", CRC Press, p. 146.
+- Kossoy, A. et al. (2013). "Mapping Carbon Pricing Initiatives: Developments and Prospects". Technical report, World Bank and Ecofys, Washington DC.
+- OECD (2009). "OECD Patent Statistics Manual". Technical report, OECD.
+- Popp, D. (2006). "International innovation and diffusion of air pollution control technologies", Journal of Environmental Economics and Management, 51.
+- Porter, M.E. (1991). "America's green strategy", Scientific American, 264.
+- Rosenbaum, P.R. (1983). "The Central Role of the Propensity Score in Observational Studies for Causal Effects". Biometrika.
+- Rosenbaum, P.R. (2009). "Design of observational studies", ch. 2. Springer.
+- Sekhon, J.S. (2011). "Multivariate and Propensity Score Matching Software with Automated Balance Optimization." Journal of Statistical Software.
+- Siegel, S. (1988). "Nonparametric statistics for the behavioral sciences", (2nd Edition). McGraw-Hill.
+
+
+### R and R-Packages
+
+- Auguie, B. and Antonov, A. (2016): **gridExtra**: "Miscellaneous Functions for 'Grid' Graphics". https://cran.r-project.org/web/packages/gridExtra/index.html
+- Hothorn, T. et al. (2016): **coin**: "Conditional Inference Procedures in a Permutation Test Framework". https://cran.r-project.org/web/packages/coin/index.html
+- Kranz, S. (2015): **RTutor**: "Creating R problem sets with automatic assessment of student's solutions". https://github.com/skranz/RTutor
+- R Development Core Team (2015). **R**: "A language and environment for statistical computing", R Foundation for Statistical Computing, Vienna, Austria.  http://www.r-project.org
+- Singh Sekhon, J. (2015): **Matching**: "Multivariate and Propensity Score Matching with Balance Optimization". https://cran.r-project.org/web/packages/Matching/index.html
+- Stephens, J (2016): **yaml**: "Methods to Convert R Data to YAML and Back". https://cran.r-project.org/web/packages/yaml/index.html
+- Wickham, H. and Francois, R. (2015): **dplyr**: "A Grammar of Data Manipulation". http://cran.r-project.org/web/packages/dplyr/index.html
+- Wickham, H and Chang, W (2016): **ggplot2**: "Create Elegant Data Visualisations Using the Grammar of Graphics". https://cran.r-project.org/web/packages/ggplot2/
+- Zeileis, A. et al. (2015): **strucchange**: "Testing, Monitoring, and Dating Structural Changes". https://cran.r-project.org/web/packages/strucchange/index.html

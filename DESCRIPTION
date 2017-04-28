@@ -1,0 +1,12 @@
+Package: RTutorEmissionTrading
+Type: Package
+Title: RTutor problem set Emission Trading and Technological Innovation
+Version: 0.1
+Date: 2017-28-04
+Author: Arthur Schaefer
+Maintainer: Arthur Schaefer <author@email.net>
+Description: RTutor problem set Emission Trading and Technological Innovation
+License: Not yet licensed by the author. The default suggestion for licensing is
+	Problem set content: Creative Commons (CC BY-SA)
+	Package code: GPL >= 2.0
+Depends: RTutor
